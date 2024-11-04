@@ -30,7 +30,6 @@ repos:
         alias: ec
         stages: [ pre-commit ]
         name: "EditorConfig Rules"
-        exclude: ^LICENSES/
   - repo: https://github.com/cmake-lint/cmake-lint
     rev: 251239e56ab8b88889fec16a47376c44dfa16a99
     hooks:
