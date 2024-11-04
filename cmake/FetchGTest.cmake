@@ -11,8 +11,8 @@ if(POLICY CMP0135)
 endif()
 
 fetchcontent_declare(googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        v1.14.0
+    URL         ${CMAKE_SOURCE_DIR}/third_party/googletest-v1.14.0.zip
+    URL_HASH    SHA256=1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

@@ -6,6 +6,12 @@
 
 """Build definitions for KleidiAI"""
 
+load(
+    "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    "update_attrs",
+    "workspace_and_buildfile",
+)
+
 # Extra warnings for GCC/CLANG C/C++
 def kai_gcc_warn_copts():
     return [
@@ -129,3 +135,29 @@ def kai_cxx_library(name, **kwargs):
         name = name,
         **kwargs
     )
+
+def _kai_local_archive_impl(ctx):
+    """Implementation of the kai_local_archive rule."""
+    ctx.extract(
+        ctx.attr.archive,
+        stripPrefix = ctx.attr.strip_prefix,
+    )
+    workspace_and_buildfile(ctx)
+
+    return update_attrs(ctx.attr, _kai_local_archive_attrs.keys(), {})
+
+_kai_local_archive_attrs = {
+    "archive": attr.label(mandatory = True, allow_single_file = True, doc = "Path to local archive relative to workspace"),
+    "strip_prefix": attr.string(doc = "Strip prefix from archive internal content"),
+    "build_file": attr.label(allow_single_file = True, doc = "Name of BUILD file for extracted repository"),
+    "build_file_content": attr.string(doc = "Content of BUILD file for extracted repository"),
+    "workspace_file": attr.label(doc = "Name of WORKSPACE file for extracted repository"),
+    "workspace_file_content": attr.string(doc = "Content of WORKSPACE file for extracted repository"),
+}
+
+kai_local_archive = repository_rule(
+    implementation = _kai_local_archive_impl,
+    attrs = _kai_local_archive_attrs,
+    local = True,
+    doc = "Rule to use repository from compressed local archive",
+)

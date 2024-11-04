@@ -7,6 +7,7 @@
 workspace(name = "com_arm_kleidiai")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("kai_defs.bzl", "kai_local_archive")
 
 http_archive(
     name = "bazel_skylib",
@@ -15,16 +16,14 @@ http_archive(
     urls = ["https://github.com/bazelbuild/bazel-skylib/archive/288731ef9f7f688932bd50e704a91a45ec185f9b.zip"],
 )
 
-http_archive(
+kai_local_archive(
     name = "com_google_googletest",
-    sha256 = "1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4",
+    archive = "//:third_party/googletest-v1.14.0.zip",
     strip_prefix = "googletest-1.14.0",
-    urls = ["https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip"],
 )
 
-http_archive(
+kai_local_archive(
     name = "com_google_benchmark",
-    sha256 = "84c49c4c07074f36fbf8b4f182ed7d75191a6fa72756ab4a17848455499f4286",
+    archive = "//:third_party/benchmark-v1.8.4.zip",
     strip_prefix = "benchmark-v1.8.4",
-    urls = ["https://github.com/google/benchmark/archive/refs/tags/v1.8.4.zip"],
 )

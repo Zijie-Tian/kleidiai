@@ -11,8 +11,8 @@ if(POLICY CMP0135)
 endif()
 
 fetchcontent_declare(googlebench
-    GIT_REPOSITORY https://github.com/google/benchmark.git
-    GIT_TAG        v1.8.4
+    URL         ${CMAKE_SOURCE_DIR}/third_party/benchmark-v1.8.4.zip
+    URL_HASH    SHA256=84c49c4c07074f36fbf8b4f182ed7d75191a6fa72756ab4a17848455499f4286
 )
 
 fetchcontent_makeavailable(googlebench)
