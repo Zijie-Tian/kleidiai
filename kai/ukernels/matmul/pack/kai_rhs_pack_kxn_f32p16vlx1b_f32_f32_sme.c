@@ -8,7 +8,7 @@
 #error This file must be compiled for AArch64, FEAT_SVE2.
 #else  // Architectural features check.
 
-#include "kai_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme.h"
+#include "kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -18,32 +18,32 @@
 static const size_t kai_nr = 16;
 static const size_t kai_kr = 1;
 
-size_t kai_get_n_step_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(void) {
+size_t kai_get_n_step_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(void) {
     return kai_nr * kai_get_sme_vector_length_u32();
 }
 
-size_t kai_get_rhs_offset_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(size_t n_idx) {
+size_t kai_get_rhs_offset_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(size_t n_idx) {
     KAI_ASSUME(n_idx % (kai_nr * kai_get_sme_vector_length_u32()) == 0);
 
     return n_idx * sizeof(uint32_t);
 }
 
-size_t kai_get_bias_offset_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(size_t n_idx) {
+size_t kai_get_bias_offset_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(size_t n_idx) {
     return n_idx * sizeof(uint32_t);
 }
 
-size_t kai_get_rhs_packed_offset_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(size_t n_idx, size_t k) {
+size_t kai_get_rhs_packed_offset_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(size_t n_idx, size_t k) {
     KAI_ASSUME(n_idx % (kai_nr * kai_get_sme_vector_length_u32()) == 0);
 
     return n_idx * (sizeof(uint32_t) + k * sizeof(uint32_t));
 }
 
-size_t kai_get_rhs_packed_size_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(size_t n, size_t k) {
-    return kai_get_rhs_packed_offset_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(
+size_t kai_get_rhs_packed_size_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(size_t n, size_t k) {
+    return kai_get_rhs_packed_offset_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(
         kai_roundup(n, kai_nr * kai_get_sme_vector_length_u32()), k);
 }
 
-void kai_run_rhs_pack_kxn_f32pb_f32_f32_16vlx1_sme(
+void kai_run_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(
     size_t num_groups, size_t n, size_t k, size_t nr, size_t kr, size_t sr, size_t rhs_stride, const void* rhs,
     const void* bias, const void* scale, void* rhs_packed, size_t extra_bytes, const void* params) {
     KAI_ASSUME(num_groups == 1);
