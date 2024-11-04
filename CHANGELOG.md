@@ -8,10 +8,20 @@
 
 KleidiAI follows the [Semantic Versioning](https://semver.org/) specification for releases.
 
-## v0.4.0 -- Upcoming Release
+## v0.4.0
 
-- Add SME2 F32 GEMV micro-kernel.
-- Micro-kernels to compute the matrix multiplication of dynamically quantized 8-bit integer (QAI8DX) LHS matrix, which typically holds the neural network activations, and quantized 4-bit integer (QSI4CX) RHS matrix, which typically holds the neural network weights, and the accumulation of the result into a single-precision (F32) output, optimized using the Arm® CPU feature FEAT_DotProd.
+- New Advanced SIMD micro-kernels:
+  - Matrix multiplication (MxN) of QAI8DX (dynamically quantized 8-bit integer) LHS and QSI4CX (quantized 4-bit integer) RHS with F32 output.
+  - Matrix multiplication (MxN and 1xN) of BF16 LHS and RHS with F32 output.
+- New SME micro-kernels:
+  - SME2 F32 matrix multiplication (1xN) micro-kernels:
+    - Compatible with 2VL RHS packing, for sharing one packed RHS with SME2 F32 GEMM micro-kernel.
+    - Compatible with 16VL RHS packing.
+  - SME F32 packing function for transposed RHS matrix.
+- Enhancements to existing micro-kernels:
+  - Port several quantized micro-kernels to optimized Advanced SIMD assembly.
+- Register SME F32 matrix multiplication micro-kernel in the benchmark suite.
+- Enable air gapped CMake builds through local third-party dependencies.
 
 ## v0.3.0
 
