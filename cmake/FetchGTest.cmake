@@ -11,7 +11,7 @@ if(POLICY CMP0135)
 endif()
 
 fetchcontent_declare(googletest
-    URL         ${CMAKE_SOURCE_DIR}/third_party/googletest-v1.14.0.zip
+    URL         ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest-v1.14.0.zip
     URL_HASH    SHA256=1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4
 )
 
