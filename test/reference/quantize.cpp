@@ -7,6 +7,7 @@
 #include "test/reference/quantize.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
