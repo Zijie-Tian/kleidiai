@@ -15,8 +15,14 @@ default:
   tags:
     - arm64
   interruptible: true
+  retry:
+    max: 2
+    when:
+      - job_execution_timeout
+      - stuck_or_timeout_failure
 
 .standard-rules:
+  timeout: 10m
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -173,6 +179,8 @@ test-remote:
   # Run the job only for a public pipeline
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_SERVER_HOST == 'gitlab.arm.com'
+  # Longer timeout than rest of jobs to account for remote
+  timeout: 1h
   stage: test
   needs: []
   when: manual
@@ -380,6 +388,7 @@ coverage:
 pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  timeout: 10m
   stage: deploy
   needs:
     - coverage
