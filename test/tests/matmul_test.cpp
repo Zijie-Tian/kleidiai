@@ -343,9 +343,12 @@ TEST_P(MatMulTest, PackedLhs) {
         GTEST_SKIP();
     }
 
+    const auto mr = method.fn_get_mr();
+    const auto kr = method.fn_get_kr();
+    const auto sr = method.fn_get_sr();
     const auto ref_lhs_row_stride = method.lhs_format.default_row_stride(lhs_w);
 
-    const auto packed_lhs_size = method.fn_get_packed_lhs_size(info.m, info.k, method.m0, 1, 1);
+    const auto packed_lhs_size = method.fn_get_packed_lhs_size(info.m, info.k, mr, kr, sr);
     const auto ref_packed_lhs_size = method.packed_lhs_format.default_size_in_bytes(lhs_h, lhs_w);
     ASSERT_EQ(packed_lhs_size, ref_packed_lhs_size);
 
@@ -360,7 +363,7 @@ TEST_P(MatMulTest, PackedLhs) {
     std::vector<uint8_t> packed_lhs;
     packed_lhs.resize(packed_lhs_size);
     method.fn_pack_lhs(
-        rect.height(), rect.width(), method.m0, 1, 1, 0, data.lhs.data() + lhs_offset, ref_lhs_row_stride,
+        rect.height(), rect.width(), mr, kr, sr, 0, data.lhs.data() + lhs_offset, ref_lhs_row_stride,
         packed_lhs.data() + packed_lhs_offset);
 
     DefaultMismatchHandler handler(0, 0.0001, 0, 0.001);
@@ -382,59 +385,61 @@ TEST_P(MatMulTest, PackedRhs) {
         GTEST_SKIP();
     }
 
-    const auto rhs_w = info.n;
-    const auto packed_rhs_h = info.n;
-    const auto packed_rhs_w = info.k;
+    const auto rhs_full_width = info.n;
+    const auto rhs_full_height = info.k;
 
-    const auto n_step = method.fn_get_pack_rhs_n_step();
-    const auto ref_n_step = method.packed_rhs_format.scheduler_block_height(packed_rhs_h);
-    ASSERT_EQ(n_step, ref_n_step);
+    const auto block_height = method.packed_rhs_format.scheduler_block_height(rhs_full_width);
+    const auto block_width = method.packed_rhs_format.scheduler_block_width(rhs_full_height);
 
-    const auto rect = portion.compute_portion(
-        packed_rhs_h, packed_rhs_w, method.packed_rhs_format.scheduler_block_height(packed_rhs_h),
-        method.packed_rhs_format.scheduler_block_width(packed_rhs_w));
+    const Rect rect = portion.compute_portion(rhs_full_width, rhs_full_height, block_height, block_width);
 
     if (rect.height() == 0 || rect.width() == 0) {
         GTEST_SKIP();
     }
 
-    const auto rhs_start_row = rect.start_col();
-    const auto rhs_start_col = rect.start_row();
+    const auto rhs_start_row = rect.start_row();
+    const auto rhs_start_col = rect.start_col();
+    const auto width = rect.width();
+    const auto height = rect.height();
+    const auto rhs_row_stride = method.rhs_format.default_row_stride(rhs_full_width);
 
-    const auto ref_rhs_row_stride = method.rhs_format.default_row_stride(rhs_w);
+    /** Ensure that all relevant parameters are sane **/
+    const auto n_step = method.fn_get_pack_rhs_n_step();
+    const auto ref_n_step = block_height;
+    ASSERT_EQ(n_step, ref_n_step);
 
-    const auto rhs_offset = method.fn_get_rhs_offset(rect.start_row());
-    const auto ref_rhs_offset = method.rhs_format.default_offset_in_bytes(rhs_start_row, rhs_start_col, rhs_w);
+    const auto rhs_offset = method.fn_get_rhs_offset(rhs_start_row);
+    const auto ref_rhs_offset =
+        method.rhs_format.default_offset_in_bytes(rhs_start_col, rhs_start_row, rhs_full_height);
     ASSERT_EQ(rhs_offset, ref_rhs_offset);
 
-    const auto packed_rhs_size = method.fn_get_packed_rhs_size(packed_rhs_h, packed_rhs_w);
-    const auto ref_packed_rhs_size = method.packed_rhs_format.default_size_in_bytes(packed_rhs_h, packed_rhs_w);
+    const auto packed_rhs_size = method.fn_get_packed_rhs_size(rhs_full_width, rhs_full_height);
+    const auto ref_packed_rhs_size = method.packed_rhs_format.default_size_in_bytes(rhs_full_width, rhs_full_height);
     ASSERT_EQ(packed_rhs_size, ref_packed_rhs_size);
 
-    const auto packed_rhs_offset = method.fn_get_pack_rhs_packed_rhs_offset(rect.start_row(), info.k);
+    const auto packed_rhs_offset = method.fn_get_pack_rhs_packed_rhs_offset(rhs_start_row, rhs_full_height);
     const auto ref_packed_rhs_offset =
-        method.packed_rhs_format.default_offset_in_bytes(rect.start_row(), rect.start_col(), packed_rhs_w);
+        method.packed_rhs_format.default_offset_in_bytes(rhs_start_row, rhs_start_col, rhs_full_height);
     ASSERT_EQ(packed_rhs_offset, ref_packed_rhs_offset);
 
-    const auto ref_rhs_scales_offset =
-        rect.start_row() * data_type_size_in_bits(method.packed_rhs_format.scale_data_type()) / 8;
+    const auto scale_type = method.packed_rhs_format.scale_data_type();
+    const auto ref_rhs_scales_offset = rhs_start_row * data_type_size_in_bits(scale_type) / 8;
 
-    const auto bias_offset = method.fn_get_bias_offset(rect.start_row());
-    const auto ref_bias_offset = method.bias_format.default_offset_in_bytes(0, rect.start_row(), info.n);
+    const auto bias_offset = method.fn_get_bias_offset(rhs_start_row);
+    const auto ref_bias_offset = method.bias_format.default_offset_in_bytes(0, rhs_start_row, rhs_full_height);
     ASSERT_EQ(bias_offset, ref_bias_offset);
 
-    std::vector<uint8_t> packed_rhs;
-    packed_rhs.resize(packed_rhs_size);
-
+    /** Perform RHS packing, and compare with reference result **/
+    std::vector<uint8_t> packed_rhs(packed_rhs_size, 0);
     method.pack_rhs(
-        rect.height(), rect.width(), data.rhs.data() + rhs_offset, ref_rhs_row_stride, data.bias.data() + bias_offset,
+        height, width, data.rhs.data() + rhs_offset, rhs_row_stride, data.bias.data() + bias_offset,
         !data.rhs_scales.empty() ? data.rhs_scales.data() + ref_rhs_scales_offset : nullptr,
         packed_rhs.data() + packed_rhs_offset);
 
-    const auto exact = method.packed_rhs_format.pack_format() != DataFormat::PackFormat::QUANTIZE_PER_ROW;
+    const bool exact = method.packed_rhs_format.pack_format() != DataFormat::PackFormat::QUANTIZE_PER_ROW;
     DefaultMismatchHandler handler(0, exact ? 0 : 0.0001, 0, exact ? 0 : 0.001);
     const auto success = compare(
-        packed_rhs.data(), data.ref_packed_rhs.data(), method.packed_rhs_format, packed_rhs_h, packed_rhs_w, rect,
+        packed_rhs.data(), data.ref_packed_rhs.data(), method.packed_rhs_format, rhs_full_width, rhs_full_height, rect,
         handler);
     ASSERT_TRUE(success);
 }

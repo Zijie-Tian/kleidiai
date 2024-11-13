@@ -22,6 +22,7 @@
 #include "test/common/memory.hpp"
 #include "test/common/printer.hpp"
 #include "test/common/rect.hpp"
+#include "test/common/round.hpp"
 
 namespace kai::test {
 
@@ -111,7 +112,7 @@ bool compare_per_row(
 
     const size_t row_block_zero_points_bytes = block_height * sizeof(Offset);
     const size_t row_block_scales_bytes = has_scale ? block_height * sizeof(Scale) : 0;
-    const size_t row_block_data_bytes = block_height * block_width * sizeof(Data);
+    const size_t row_block_data_bytes = block_height * round_up_multiple(full_width, block_width) * sizeof(Data);
 
     const auto* imp_ptr = reinterpret_cast<const uint8_t*>(imp_data);
     const auto* ref_ptr = reinterpret_cast<const uint8_t*>(ref_data);
