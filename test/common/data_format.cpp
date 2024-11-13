@@ -149,8 +149,9 @@ uintptr_t DataFormat::default_row_stride(size_t width) const {
 
 uintptr_t DataFormat::default_offset_in_bytes(size_t row, size_t col, size_t width) const {
     const auto row_stride = default_row_stride(width);
+    const auto block_width = scheduler_block_width(width);
 
-    KAI_ASSERT(col % scheduler_block_width(width) == 0);
+    KAI_ASSERT(col % block_width == 0);
 
     switch (_pack_format) {
         case PackFormat::NONE:
@@ -170,7 +171,8 @@ uintptr_t DataFormat::default_offset_in_bytes(size_t row, size_t col, size_t wid
 
 size_t DataFormat::default_size_in_bytes(size_t height, size_t width) const {
     const auto num_rows = _block_height > 0 ? (height + _block_height - 1) / _block_height : height;
-    return num_rows * default_row_stride(width);
+    const auto block_stride = default_row_stride(width);
+    return num_rows * block_stride;
 }
 
 }  // namespace kai::test

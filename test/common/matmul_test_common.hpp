@@ -369,11 +369,6 @@ struct MatMulMethod {
     void pack_rhs(
         size_t n, size_t k, const void* rhs, size_t rhs_row_stride, const void* bias, const void* scale,
         void* packed_rhs) const {
-        KAI_UNUSED(n);
-        KAI_UNUSED(k);
-        KAI_UNUSED(rhs);
-        KAI_UNUSED(rhs_row_stride);
-        KAI_UNUSED(bias);
         KAI_UNUSED(scale);
 
         if (fn_pack_rhs != nullptr) {
@@ -397,13 +392,7 @@ struct MatMulMethod {
     void pack_rhs_nxk(
         size_t n, size_t k, const void* rhs, size_t rhs_row_stride, const void* bias, const void* scale,
         void* packed_rhs) const {
-        KAI_UNUSED(n);
-        KAI_UNUSED(k);
-        KAI_UNUSED(rhs);
-        KAI_UNUSED(rhs_row_stride);
-        KAI_UNUSED(bias);
         KAI_UNUSED(scale);
-        KAI_UNUSED(packed_rhs);
 
         if (fn_pack_rhs_nxk != nullptr) {
             fn_pack_rhs_nxk(

@@ -48,14 +48,12 @@ std::vector<uint8_t> pack_block(
                             const size_t esize = dst_esize;
 
                             if (y_block + y_subblock + y_element < full_height) {
-                                const auto len = std::min(subblock_width, full_width - x_block - x_subblock);
+                                const size_t y_offset = (y_block + y_subblock + y_element) * full_width;
+                                const size_t x_offset = x_block + x_subblock;
+                                const size_t offset = y_offset + x_offset;
+                                const auto len = std::min(subblock_width, full_width - x_offset);
 
-                                memcpy(
-                                    dst_ptr,
-                                    src_ptr +
-                                        ((y_block + y_subblock + y_element) * full_width + x_block + x_subblock) *
-                                            esize,
-                                    len * esize);
+                                memcpy(dst_ptr, src_ptr + offset * esize, len * esize);
                             }
 
                             dst_ptr += subblock_width * esize;

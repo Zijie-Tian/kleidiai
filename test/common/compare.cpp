@@ -65,9 +65,7 @@ bool compare_raw(
                             const auto y = y_block + y_subblock + y_element;
                             const auto x = x_block + x_subblock + x_element;
 
-                            const auto in_roi = y >= rect.start_row() && y < rect.end_row() && x >= rect.start_col() &&
-                                x < rect.end_col();
-
+                            const auto in_roi = rect.contains(y, x);
                             const auto imp_value = read_array<Data>(imp_data, idx);
                             const auto ref_value = in_roi ? read_array<Data>(ref_data, idx) : static_cast<Data>(0);
 
@@ -99,7 +97,7 @@ template <typename Data, typename Scale, typename Offset>
 bool compare_per_row(
     const void* imp_data, const void* ref_data, const DataFormat& format, size_t full_height, size_t full_width,
     const Rect& rect, MismatchHandler& handler) {
-    constexpr auto has_scale = !std::is_null_pointer_v<Scale>;
+    static constexpr auto has_scale = !std::is_null_pointer_v<Scale>;
 
     const auto block_height = format.actual_block_height(full_height);
     const auto block_width = format.actual_block_width(full_width);
@@ -111,11 +109,9 @@ bool compare_per_row(
     KAI_ASSUME(rect.start_col() == 0);
     KAI_ASSUME(rect.width() == full_width);
 
-    const auto data_bits = size_in_bits<Data>;
-
-    const auto row_block_zero_points_bytes = block_height * sizeof(Offset);
-    const auto row_block_scales_bytes = has_scale ? block_height * sizeof(Scale) : 0;
-    const auto row_block_data_bytes = block_height * block_width * data_bits / 8;
+    const size_t row_block_zero_points_bytes = block_height * sizeof(Offset);
+    const size_t row_block_scales_bytes = has_scale ? block_height * sizeof(Scale) : 0;
+    const size_t row_block_data_bytes = block_height * block_width * sizeof(Data);
 
     const auto* imp_ptr = reinterpret_cast<const uint8_t*>(imp_data);
     const auto* ref_ptr = reinterpret_cast<const uint8_t*>(ref_data);

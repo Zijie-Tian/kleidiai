@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iosfwd>
 
 namespace kai::test {
 
@@ -41,7 +42,12 @@ public:
     /// Gets the end (exclusive) column index.
     [[nodiscard]] size_t end_col() const;
 
+    /// Check if position is within rect
+    [[nodiscard]] bool contains(size_t row, size_t col) const;
+
 private:
+    friend std::ostream& operator<<(std::ostream& os, const Rect& rect);
+
     size_t _start_row;
     size_t _start_col;
     size_t _height;
