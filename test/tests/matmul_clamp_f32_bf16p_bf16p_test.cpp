@@ -343,7 +343,6 @@ std::map<MatMulTestBf16::TestDataId, MatMulTestBf16::TestData> MatMulTestBf16::_
 /// Tests the output.
 TEST_P(MatMulTestBf16, Output) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -353,6 +352,7 @@ TEST_P(MatMulTestBf16, Output) {
         GTEST_SKIP();
     }
 
+    const auto& data = test_data();
     const auto m_step = method.fn_get_main_m_step();
     ASSERT_TRUE(m_step % method.m0 == 0);
 

@@ -321,7 +321,6 @@ std::map<MatMulTest::TestDataId, MatMulTest::TestData> MatMulTest::_data;
 /// Tests the LHS packing kernel.
 TEST_P(MatMulTest, PackedLhs) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -331,6 +330,7 @@ TEST_P(MatMulTest, PackedLhs) {
         GTEST_SKIP();
     }
 
+    const auto& data = test_data();
     const auto lhs_h = info.m;
     const auto lhs_w = info.k;
 
@@ -374,7 +374,6 @@ TEST_P(MatMulTest, PackedLhs) {
 /// Tests the RHS packing kernel.
 TEST_P(MatMulTest, PackedRhs) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -384,6 +383,7 @@ TEST_P(MatMulTest, PackedRhs) {
         GTEST_SKIP();
     }
 
+    const auto& data = test_data();
     const auto rhs_full_width = info.n;
     const auto rhs_full_height = info.k;
 
@@ -446,7 +446,6 @@ TEST_P(MatMulTest, PackedRhs) {
 /// Tests the transposed RHS packing kernel.
 TEST_P(MatMulTest, PackedTransposedRhs) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -456,6 +455,7 @@ TEST_P(MatMulTest, PackedTransposedRhs) {
         GTEST_SKIP();
     }
 
+    const auto& data = test_data();
     const auto n_step = method.fn_pack_rhs_nxk_get_n_step();
     const auto ref_n_step = method.packed_rhs_format.scheduler_block_height(info.n);
     ASSERT_EQ(n_step, ref_n_step);
@@ -508,7 +508,6 @@ TEST_P(MatMulTest, PackedTransposedRhs) {
 /// Tests the output.
 TEST_P(MatMulTest, Output) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -518,6 +517,7 @@ TEST_P(MatMulTest, Output) {
         GTEST_SKIP();
     }
 
+    const auto& data = test_data();
     const auto m_step = method.fn_get_main_m_step();
     ASSERT_EQ(m_step, method.m0);
 
