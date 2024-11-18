@@ -164,6 +164,12 @@ inline static int8_t kai_ext_sign_i8_i4(int8_t value) {
     return (value ^ 0x8) - 8;  // NOLINT(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
 }
 
+/// Parameter struct for RHS matrix packing
+struct kai_rhs_pack_qs4cxs1s0_param {
+    int8_t lhs_zero_point;  /**< LHS Matrix quantization zero-point */
+    uint8_t rhs_zero_point; /**< RHS Matrix quantization zero-point */
+};
+
 #ifdef __cplusplus
 }
 #endif

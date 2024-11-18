@@ -8,14 +8,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "kai/kai_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params {
-    int8_t lhs_zero_point;
-    uint8_t rhs_zero_point;
-};
+#define kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params kai_rhs_pack_qs4cxs1s0_param
 
 /// Get the n step value.
 ///
