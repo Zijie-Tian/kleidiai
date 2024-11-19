@@ -33,6 +33,7 @@
 #include "test/reference/cast.hpp"
 #include "test/reference/fill.hpp"
 #include "test/reference/matmul.hpp"
+#include "test/reference/pad.hpp"
 #include "test/reference/quantize.hpp"
 #include "test/reference/transpose.hpp"
 
@@ -103,6 +104,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
     const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), N * K);
+    const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
+        ref_rhs_qsu4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
 
     const size_t ref_rhs_qsu4_stride = round_up_division(K, 2);
     const size_t ref_rhs_scales_stride = round_up_division(K, bl) * sizeof(uint16_t);
@@ -113,7 +116,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     constexpr kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4.data(), ref_rhs_qsu4_stride, nullptr,
+        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride, nullptr,
         reinterpret_cast<const float*>(ref_rhs_scales.data()), ref_rhs_scales_stride, imp_packed_rhs.data(), 0,
         &params);
 
@@ -198,7 +201,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
     const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), ref_rhs_qsi4_kxn_size);
-
+    const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
+        ref_rhs_qsu4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const size_t ref_rhs_qsu4_stride = round_up_division(N, 2);
     const size_t ref_rhs_scales_stride = round_up_division(K, bl) * sizeof(uint16_t);
 
@@ -208,7 +212,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     constexpr kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4.data(), ref_rhs_qsu4_stride, nullptr, ref_rhs_scales.data(),
+        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride, nullptr, ref_rhs_scales.data(),
         ref_rhs_scales_stride, imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
@@ -237,6 +241,7 @@ INSTANTIATE_TEST_SUITE_P(
     MatMul, MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p,
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi4c32p.size()),
-        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{8, 32, 64}), testing::Values(32, 64)));
+        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{8, 32, 64}, MatMulShape{17, 25, 33}),
+        testing::Values(32, 64)));
 
 }  // namespace kai::test

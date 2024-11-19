@@ -33,6 +33,7 @@
 #include "test/reference/cast.hpp"
 #include "test/reference/fill.hpp"
 #include "test/reference/matmul.hpp"
+#include "test/reference/pad.hpp"
 #include "test/reference/quantize.hpp"
 #include "test/reference/transpose.hpp"
 
@@ -99,11 +100,15 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
+    const auto ref_rhs_qsi4_padded = pad_row<Int4>(
+        ref_rhs_qsi4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
+
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0(N, K, nr, kr, sr);
+
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_nxk_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 0};
     kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0(
-        1, N, K, nr, kr, sr, ref_rhs_qsi4.data(), reinterpret_cast<const float*>(ref_biases.data()),
+        1, N, K, nr, kr, sr, ref_rhs_qsi4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
@@ -171,15 +176,19 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
     kai_run_lhs_quant_pack_qai8dxp_f32(
         M, K, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float), imp_packed_lhs.data());
 
+    const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), N * K);
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
-    const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), N * K);
+    const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
+        ref_rhs_qsu4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
+
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0(N, K, nr, kr, sr);
+
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_nxk_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 8};
     kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0(
-        1, N, K, nr, kr, sr, ref_rhs_qsu4.data(), reinterpret_cast<const float*>(ref_biases.data()),
+        1, N, K, nr, kr, sr, ref_rhs_qsu4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
@@ -262,11 +271,13 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
+    const auto ref_rhs_qsi4_padded = pad_row<Int4>(
+        ref_rhs_qsi4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0(N, K, nr, kr, sr);
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 0};
     kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0(
-        1, N, K, nr, kr, sr, ref_rhs_qsi4.data(), reinterpret_cast<const float*>(ref_biases.data()),
+        1, N, K, nr, kr, sr, ref_rhs_qsi4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
@@ -350,11 +361,13 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
     //   * Packs the RHS matrix.
     const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), ref_rhs_qsi4_kxn_size);
+    const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
+        ref_rhs_qsu4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0(N, K, nr, kr, sr);
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 8};
     kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0(
-        1, N, K, nr, kr, sr, ref_rhs_qsu4.data(), reinterpret_cast<const float*>(ref_biases.data()),
+        1, N, K, nr, kr, sr, ref_rhs_qsu4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
@@ -383,6 +396,6 @@ INSTANTIATE_TEST_SUITE_P(
     MatMul, MatMulTest_f32_qai8dxp_qsi4cxp,
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.size()),
-        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{16, 32, 36})));
+        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{16, 32, 36}, MatMulShape{15, 35, 65})));
 
 }  // namespace kai::test

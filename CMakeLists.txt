@@ -196,6 +196,7 @@ if(KLEIDIAI_BUILD_TESTS)
         test/reference/matmul.cpp
         test/reference/fill.cpp
         test/reference/pack.cpp
+        test/reference/pad.cpp
         test/reference/quantize.cpp
         test/reference/reduce.cpp
         test/reference/transpose.cpp
