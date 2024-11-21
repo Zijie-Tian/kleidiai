@@ -329,7 +329,7 @@ struct MatMulMethod {
         float clamp_min, float clamp_max)>
         fn_matmul_f32_bf16p_bf16p = nullptr;
 
-    /// Performs F32 matrix multiplication with LHS & RHS packing
+    /// Performs F16 or F32 matrix multiplication with LHS & RHS packing
     /// followed by clamp operation.
     ///
     /// @param[in] m Number of output rows to be computed.
@@ -342,6 +342,11 @@ struct MatMulMethod {
     /// @param[in] dst_stride_col Column stride in bytes of the output matrix.
     /// @param[in] clamp_min Minimum value to clamp the final result.
     /// @param[in] clamp_max Maximum value to clamp the final result.
+    std::function<void(
+        size_t m, size_t n, size_t k, const void* lhs_packed, const void* rhs_packed, void* dst, size_t dst_stride_row,
+        size_t dst_stride_col, float clamp_min, float clamp_max)>
+        fn_matmul_f16_f16p_f16p = nullptr;
+
     std::function<void(
         size_t m, size_t n, size_t k, const void* lhs_packed, const void* rhs_packed, void* dst, size_t dst_stride_row,
         size_t dst_stride_col, float clamp_min, float clamp_max)>
@@ -404,8 +409,11 @@ struct MatMulMethod {
     }
 
     [[nodiscard]] bool has_main_kernel() const {
-        return fn_matmul_f16_f16_f16p != nullptr || fn_matmul_f32_f32p_f32p != nullptr ||
-            fn_matmul_f32_f32_f32p != nullptr || fn_matmul_f32_bf16p_bf16p != nullptr;
+        return fn_matmul_f16_f16_f16p != nullptr ||  //
+            fn_matmul_f16_f16p_f16p != nullptr ||    //
+            fn_matmul_f32_f32p_f32p != nullptr ||    //
+            fn_matmul_f32_f32_f32p != nullptr ||     //
+            fn_matmul_f32_bf16p_bf16p != nullptr;
     }
 
     void main_kernel(
@@ -422,6 +430,8 @@ struct MatMulMethod {
             fn_matmul_f32_f32_f32p(
                 m, n, k, lhs, lhs_stride, rhs, dst, dst_stride, sizeof(float), clamp_min,
                 static_cast<Float16>(clamp_max));
+        } else if (fn_matmul_f16_f16p_f16p) {
+            fn_matmul_f16_f16p_f16p(m, n, k, lhs, rhs, dst, dst_stride, sizeof(Float16), clamp_min, clamp_max);
         } else if (fn_matmul_f32_f32p_f32p) {
             fn_matmul_f32_f32p_f32p(m, n, k, lhs, rhs, dst, dst_stride, sizeof(float), clamp_min, clamp_max);
         } else if (fn_matmul_f32_bf16p_bf16p) {
