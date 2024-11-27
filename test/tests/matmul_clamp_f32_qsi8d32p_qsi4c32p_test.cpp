@@ -15,7 +15,9 @@
 #include <tuple>
 #include <vector>
 
+#include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p1x4_qsi4c32p4x4_1x4_neon_dotprod.h"
 #include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p1x8_qsi4c32p4x8_1x4x32_neon_dotprod.h"
+#include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p4x4_qsi4c32p4x4_16x4_neon_dotprod.h"
 #include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p4x8_qsi4c32p4x8_16x4_neon_i8mm.h"
 #include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p4x8_qsi4c32p4x8_8x4x32_neon_i8mm.h"
 #include "kai/ukernels/matmul/matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p_qsi4c32p_interface.h"
@@ -34,11 +36,13 @@
 
 namespace kai::test {
 
-static const std::array<UkernelVariant<kai_matmul_clamp_f32_qsi8d32p_qsi4c32p_ukernel>, 3>
+static const std::array<UkernelVariant<kai_matmul_clamp_f32_qsi8d32p_qsi4c32p_ukernel>, 5>
     variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p = {{
         UKERNEL_MATMUL_VARIANT(clamp_f32_qsi8d32p4x8_qsi4c32p4x8_8x4x32_neon_i8mm, cpu_has_i8mm),
         UKERNEL_MATMUL_VARIANT(clamp_f32_qsi8d32p4x8_qsi4c32p4x8_16x4_neon_i8mm, cpu_has_i8mm),
         UKERNEL_MATMUL_VARIANT(clamp_f32_qsi8d32p1x8_qsi4c32p4x8_1x4x32_neon_dotprod, cpu_has_dotprod),
+        UKERNEL_MATMUL_VARIANT(clamp_f32_qsi8d32p4x4_qsi4c32p4x4_16x4_neon_dotprod, cpu_has_dotprod),
+        UKERNEL_MATMUL_VARIANT(clamp_f32_qsi8d32p1x4_qsi4c32p4x4_1x4_neon_dotprod, cpu_has_dotprod),
     }};
 
 class MatMulTest_f32_qsi8d32p_qsi4c32p : public UkernelVariantTest {};
@@ -62,6 +66,10 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
     const auto nr = ukernel_variant.interface.get_nr();
     const auto kr = ukernel_variant.interface.get_kr();
     const auto sr = ukernel_variant.interface.get_sr();
+
+    if (mr == 1 && M > 1) {
+        GTEST_SKIP() << "Kernel does not support M != 1";
+    }
 
     // Generates input data.
     const auto ref_lhs = fill_random<float>(M * K, seed + 0);

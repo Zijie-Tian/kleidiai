@@ -8,6 +8,10 @@
 
 KleidiAI follows the [Semantic Versioning](https://semver.org/) specification for releases.
 
+## v0.5.0
+
+- New micro-kernels to compute the matrix multiplication of dynamically quantized symmetric signed 8-bit integer with per-block quantization (QSI8D32) LHS and quantized symmetric 4-bit signed integer with per-block quantization (QSI4C32) RHS. The destination matrix data type is single-precision floating-point (F32). The micro-kernels have been optimized using the Arm® CPU feature FEAT_DotProd.
+
 ## v0.4.0
 
 - New Advanced SIMD micro-kernels:
