@@ -56,4 +56,8 @@ std::vector<uint8_t> transpose(
 template std::vector<uint8_t> transpose<Int4>(
     const void* data, const size_t height, const size_t width, const size_t src_stride, const size_t dst_stride,
     const size_t dst_size);
+
+template std::vector<uint8_t> transpose<int8_t>(
+    const void* data, const size_t height, const size_t width, const size_t src_stride, const size_t dst_stride,
+    const size_t dst_size);
 }  // namespace kai::test
