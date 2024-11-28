@@ -180,6 +180,7 @@ target_include_directories(kleidiai
 )
 
 target_compile_options(kleidiai
+    PRIVATE "-Wpedantic"
     PRIVATE ${KLEIDIAI_WARNING_FLAGS}
 )
 

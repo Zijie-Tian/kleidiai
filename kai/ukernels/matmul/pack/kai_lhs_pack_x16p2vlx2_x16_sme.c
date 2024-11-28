@@ -76,12 +76,14 @@ void kai_run_lhs_pack_x16p2vlx2_x16_sme(
 
     const void* in[block_height];
 
+    uint8_t* lhs_packed_ptr = lhs_packed;
+    const uint8_t* lhs_ptr = lhs;
     for (size_t block_y = 0; block_y < m; block_y += block_height) {
         const size_t height = KAI_MIN(m - block_y, block_height);
-        void* out = lhs_packed + block_y * kai_roundup(k, kai_kr) * sizeof(__fp16);
+        void* out = lhs_packed_ptr + block_y * kai_roundup(k, kai_kr) * sizeof(__fp16);
 
         for (size_t y = 0; y < height; y++) {
-            in[y] = lhs + (block_y + y) * lhs_stride;
+            in[y] = lhs_ptr + (block_y + y) * lhs_stride;
         }
 
         __asm__ __volatile__(

@@ -23,11 +23,11 @@ static const size_t kai_sr = 2;
 static const size_t kai_bl = 32;
 static const size_t kai_num_bytes_multiplier = sizeof(uint16_t);
 
-inline static size_t kai_num_bytes_per_block_lhs() {
+inline static size_t kai_num_bytes_per_block_lhs(void) {
     return kai_bl * sizeof(int8_t) + kai_num_bytes_multiplier;
 }
 
-inline static size_t kai_num_bytes_per_block_rhs() {
+inline static size_t kai_num_bytes_per_block_rhs(void) {
     return (kai_bl / 2) * sizeof(int8_t) + kai_num_bytes_multiplier;
 }
 

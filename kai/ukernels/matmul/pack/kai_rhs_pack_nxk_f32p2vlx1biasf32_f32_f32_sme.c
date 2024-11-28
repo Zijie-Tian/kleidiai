@@ -73,13 +73,16 @@ void kai_run_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(
     const size_t row_offset = 0;
 
     const void* in[block_height];
+    uint8_t* rhs_packed_ptr = rhs_packed;
+    const uint8_t* rhs_ptr = rhs;
+    const uint8_t* bias_ptr = bias;
 
     for (size_t block_y = 0; block_y < n; block_y += block_height) {
         const size_t height = KAI_MIN(n - block_y, block_height);
-        void* out = rhs_packed + block_y * (kai_num_bytes_bias + kai_roundup(k, kai_kr) * kai_num_bytes_data);
+        void* out = rhs_packed_ptr + block_y * (kai_num_bytes_bias + kai_roundup(k, kai_kr) * kai_num_bytes_data);
 
         for (size_t y = 0; y < height; y++) {
-            in[y] = rhs + (block_y + y) * rhs_stride;
+            in[y] = rhs_ptr + (block_y + y) * rhs_stride;
         }
 
         __asm__ __volatile__(
@@ -346,7 +349,8 @@ void kai_run_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(
               "z11", "z12", "z13", "z14", "z15", "z16", "z17", "z18", "z19", "z20", "z21", "z22", "z23", "z24", "z25",
               "z26", "z27", "z28", "z29", "z30", "z31");
 
-        bias += height * kai_num_bytes_bias;
+        bias_ptr += height * kai_num_bytes_bias;
+        bias = bias_ptr;
     }
 }
 

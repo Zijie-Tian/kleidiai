@@ -168,13 +168,15 @@ void kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
         // Iterate over the quantized blocks
         for (size_t dst_qblock_idx = 0; dst_qblock_idx < num_qblocks_per_row; ++dst_qblock_idx) {
             // Store the scales after packing all K values
-            void* rhs_packed_scale = dst_row + num_bytes_per_block_k * nr;
+            uint8_t* rhs_packed_scale = dst_row + num_bytes_per_block_k * nr;
+            const uint8_t* scale_ptr = scale;
 
             for (size_t i = 0; i < nr; ++i) {
                 const size_t src_row_idx = KAI_MIN(dst_row_idx * nr + i, n - 1);
+
                 void* dst_scales_ptr = rhs_packed_scale + i * num_bytes_multiplier_rhs;
-                void* src_scales_ptr = (void*)(scale + dst_qblock_idx * num_bytes_multiplier_rhs +  //
-                                               (src_row_idx * scale_stride));                       //
+                const void* src_scales_ptr = scale_ptr + dst_qblock_idx * num_bytes_multiplier_rhs +  //
+                    (src_row_idx * scale_stride);                                                     //
 
                 memcpy(
                     dst_scales_ptr,             //
