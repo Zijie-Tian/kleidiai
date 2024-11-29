@@ -121,10 +121,12 @@ kai_c_library(
     srcs = [
         "pack/kai_lhs_pack_x16p2vlx2_x16_sme.c",
         "pack/kai_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme.c",
+        "pack/kai_rhs_pack_nxk_x16p2vlx2b_x16_x16_sme.c",
     ],
     hdrs = [
         "pack/kai_lhs_pack_x16p2vlx2_x16_sme.h",
         "pack/kai_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme.h",
+        "pack/kai_rhs_pack_nxk_x16p2vlx2b_x16_x16_sme.h",
     ],
     cpu_uarch = kai_cpu_sme(),
 )
