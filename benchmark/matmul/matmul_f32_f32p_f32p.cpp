@@ -4,10 +4,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if !defined(__aarch64__) || !defined(__ARM_FEATURE_SVE2)
-#error This file must be compiler for AArch64, FEAT_SVE2
-#else  // Architectural feature check
-
 #include "benchmark/matmul/matmul_f32_f32p_f32p.hpp"
 
 #include <benchmark/benchmark.h>
@@ -116,5 +112,3 @@ void RegisterBenchmarks(size_t m, size_t n, size_t k) {
     }
 }
 }  // namespace kai::bench::matmul_f32_f32p_f32p
-
-#endif /* defined(__aarch64__) && defined(__ARM_FEATURE_SVE2) */

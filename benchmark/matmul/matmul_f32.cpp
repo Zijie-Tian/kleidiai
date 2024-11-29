@@ -4,10 +4,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#if !defined(__ARM_FEATURE_DOTPROD) && !defined(__ARM_FEATURE_MATMUL_INT8)
-#error "Dotprod and I8mm extensions required to compile this example"
-#else
-
 #include <benchmark/benchmark.h>
 
 #include <climits>
@@ -256,5 +252,3 @@ void RegisterBenchmarks(size_t m, size_t n, size_t k) {
 
 };  /* namespace i8mm */
 };  // namespace kai::bench::matmul_f32_qa8dxp_qs4cxp
-
-#endif /* !defined(__ARM_FEATURE_DOTPROD) && !defined(__ARM_FEATURE_MATMUL_INT8) */

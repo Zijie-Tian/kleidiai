@@ -182,8 +182,10 @@ if((CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL
     set_source_files_properties(${KLEIDIAI_FILES_NEON_FP16_BF16} PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+bf16+fp16${KLEIDIAI_INTERNAL_EXTRA_ARCH})
     set_source_files_properties(${KLEIDIAI_FILES_NEON_DOTPROD}   PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+dotprod${KLEIDIAI_INTERNAL_EXTRA_ARCH})
     set_source_files_properties(${KLEIDIAI_FILES_NEON_I8MM}      PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+i8mm${KLEIDIAI_INTERNAL_EXTRA_ARCH})
-    set_source_files_properties(${KLEIDIAI_FILES_SME}            PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+sve+sve2${KLEIDIAI_INTERNAL_EXTRA_ARCH})
-    set_source_files_properties(${KLEIDIAI_FILES_SME2}           PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+sve+sve2${KLEIDIAI_INTERNAL_EXTRA_ARCH})
+
+    # Use -fno-tree-vectorize option to disable compiler based vectorization
+    set_source_files_properties(${KLEIDIAI_FILES_SME}          PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize;-march=armv8.2-a+sve+sve2${KLEIDIAI_INTERNAL_EXTRA_ARCH}")
+    set_source_files_properties(${KLEIDIAI_FILES_SME2}         PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize;-march=armv8.2-a+sve+sve2${KLEIDIAI_INTERNAL_EXTRA_ARCH}")
 endif()
 
 target_include_directories(kleidiai
@@ -231,7 +233,7 @@ if(KLEIDIAI_BUILD_TESTS)
         PUBLIC -march=armv8.2-a+fp16+bf16${KLEIDIAI_INTERNAL_EXTRA_ARCH}
     )
 
-    set_source_files_properties(test/common/sme.cpp PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+sve${KLEIDIAI_INTERNAL_EXTRA_ARCH})
+    set_source_files_properties(test/common/sme.cpp PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize;-march=armv8.2-a+sve${KLEIDIAI_INTERNAL_EXTRA_ARCH}")
 
     target_link_libraries(kleidiai_test_framework
         PUBLIC  kleidiai
@@ -282,8 +284,6 @@ if(KLEIDIAI_BUILD_BENCHMARK)
         benchmark/matmul/matmul_f32.cpp
         test/common/cpu_info.cpp)
 
-    set_source_files_properties(benchmark/matmul/matmul_f32_f32p_f32p.cpp PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+sve+sve2${KLEIDIAI_INTERNAL_EXTRA_ARCH})
-    set_source_files_properties(benchmark/matmul/matmul_f32.cpp PROPERTIES COMPILE_OPTIONS -march=armv8.2-a+dotprod+i8mm${KLEIDIAI_INTERNAL_EXTRA_ARCH})
     target_link_libraries(
         kleidiai_benchmark
         kleidiai

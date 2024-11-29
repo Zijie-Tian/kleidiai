@@ -50,28 +50,34 @@ def kai_cpu_select(cpu_uarch):
     if len(cpu_uarch) == 0:
         return "armv8-a"
     else:
-        return "armv8.2-a" + cpu_uarch
+        return "armv8.2-a+" + "+".join(cpu_uarch)
 
 def kai_cpu_i8mm():
-    return "+i8mm"
+    return ["i8mm"]
 
 def kai_cpu_dotprod():
-    return "+dotprod"
+    return ["dotprod"]
 
 def kai_cpu_bf16():
-    return "+bf16"
+    return ["bf16"]
 
 def kai_cpu_fp16():
-    return "+fp16"
+    return ["fp16"]
 
 def kai_cpu_neon():
-    return ""
+    return []
+
+def kai_cpu_sve():
+    return ["sve"]
+
+def kai_cpu_sve2():
+    return ["sve2"]
 
 def kai_cpu_sme():
-    return "+sve+sve2"
+    return ["sme"]
 
 def kai_cpu_sme2():
-    return "+sve+sve2"
+    return ["sme2"]
 
 # MSVC compiler options
 def kai_msvc_std_copts():
@@ -96,14 +102,48 @@ def kai_cxxopts(ua_variant):
         "//conditions:default": kai_gcc_std_cxxopts() + ["-march=" + kai_cpu_select(ua_variant)],
     })
 
-def kai_c_library(name, **kwargs):
-    """C native cc_library wrapper with custom parameters and defaults
+def _kai_list_check(predicate, sub_list, super_list):
+    """ Allow to check of any or all elements of first list are in second one
+
+    Args:
+        predicate (function): predicate to check. For example 'all' or 'any'
+        sub_list (list): first list
+        super_list (list): second list
+    """
+    return predicate([item in super_list for item in sub_list])
+
+def _kai_c_cxx_common(name, copts_def_func, **kwargs):
+    """Common C/C++ native cc_library wrapper with custom parameters and defaults
 
     Args:
         name (string): name of target library
+        copts_def_func (function): function to get C or C++ respective defaults
         **kwargs (dict): other arguments like srcs, hdrs, deps
     """
-    kwargs["copts"] = kwargs.get("copts", []) + kai_copts(kwargs.get("cpu_uarch", kai_cpu_neon()))
+
+    # Convert CPU uarch to list of features
+    cpu_uarch = kwargs.get("cpu_uarch", kai_cpu_neon())
+    extra_copts = []
+
+    # Indicate if SME flags should be replaced since a toolchain may not support it
+    replace_sme_flags = _kai_list_check(any, kai_cpu_sme() + kai_cpu_sme2(), cpu_uarch)
+
+    if replace_sme_flags:
+        if _kai_list_check(all, kai_cpu_sme(), cpu_uarch):
+            for uarch in kai_cpu_sme():
+                cpu_uarch.remove(uarch)
+
+        if _kai_list_check(all, kai_cpu_sme2(), cpu_uarch):
+            for uarch in kai_cpu_sme2():
+                cpu_uarch.remove(uarch)
+
+        # Replace SME/SME2 with SVE+SVE2, but disable compiler vectorization
+        cpu_uarch.extend(kai_cpu_sve())
+        cpu_uarch.extend(kai_cpu_sve2())
+
+        extra_copts.append("-fno-tree-vectorize")
+
+    kwargs["copts"] = kwargs.get("copts", []) + copts_def_func(cpu_uarch) + extra_copts
     kwargs["deps"] = ["//:common"] + kwargs.get("deps", [])
     kwargs["linkstatic"] = kwargs.get("linkstatic", True)
 
@@ -115,6 +155,15 @@ def kai_c_library(name, **kwargs):
         name = name,
         **kwargs
     )
+
+def kai_c_library(name, **kwargs):
+    """C native cc_library wrapper with custom parameters and defaults
+
+    Args:
+        name (string): name of target library
+        **kwargs (dict): other arguments like srcs, hdrs, deps
+    """
+    _kai_c_cxx_common(name, kai_copts, **kwargs)
 
 def kai_cxx_library(name, **kwargs):
     """C++ native cc_library wrapper with custom parameters and defaults
@@ -123,18 +172,7 @@ def kai_cxx_library(name, **kwargs):
         name (string): name of target library
         **kwargs (dict): other arguments like srcs, hdrs, deps
     """
-    kwargs["copts"] = kwargs.get("copts", []) + kai_cxxopts(kwargs.get("cpu_uarch", kai_cpu_neon()))
-    kwargs["deps"] = ["//:common"] + kwargs.get("deps", [])
-    kwargs["linkstatic"] = kwargs.get("linkstatic", True)
-
-    # Remove custom cpu_uarch paramter before passing it to cc_library
-    if "cpu_uarch" in kwargs:
-        kwargs.pop("cpu_uarch")
-
-    native.cc_library(
-        name = name,
-        **kwargs
-    )
+    _kai_c_cxx_common(name, kai_cxxopts, **kwargs)
 
 def _kai_local_archive_impl(ctx):
     """Implementation of the kai_local_archive rule."""
