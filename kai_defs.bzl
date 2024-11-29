@@ -40,7 +40,7 @@ def kai_gcc_warn_cxxopts():
 
 # GCC/CLANG compiler options
 def kai_gcc_std_copts():
-    return ["-std=c99"] + kai_gcc_warn_copts()
+    return ["-std=c99", "-Wpedantic"] + kai_gcc_warn_copts()
 
 # GCC/CLANG compiler options
 def kai_gcc_std_cxxopts():
