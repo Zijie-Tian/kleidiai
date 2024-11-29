@@ -26,6 +26,20 @@ The pattern of the packed output is shown below
 
 Each block has bias and weights arranged as expected by the micro kernel to produce a mr x nr output matrix. There can be padding involved in the blocks depending on the combination of underlying instruction used for the optimization in the micro kernel, the chosen values of mr and nr and input dimensions, M, N and K.
 
+#### kai_run_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme()
+
+Pack RHS(weights), bias and scaling factor together into X number of blocks that are a combination of scale, bias and RHS. Details of the input are below.
+
+1. Values calculated using the bias, reduce_sum and lhs_zero point such that;  Value\[n\] = Bias\[n\] - (lhs_zero_point * reduce_sum\[n\]). Each block has nr elements, including padding.
+1. Non-transposed RHS of dimension KxN. Each block contains nr\*kr elements, including any padding.
+1. Scale values calculated as Scale\[n\] = (rhs_scale\[n\] * lhs_scale) / dst_scale. Each block has nr elements, including any padding.
+
+The pattern of the packed output is shown below.
+
+![rhs_pack_pattern_2](../../../../docs/imgs/kai_rhs_packing_pattern_2.png)</br>
+
+Padding may be involved in the blocks depending on the values of mr, nr and kr and the input dimensions, M, N and K.
+
 ## Packing for int4 matmul micro-kernels
 
 For optimal cache utilization, the operands are packed for the matmul operations. There are 2 types of packing functions used in int4 matmul micro-kernels:

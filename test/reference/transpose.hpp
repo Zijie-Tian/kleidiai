@@ -37,7 +37,18 @@ std::vector<uint8_t> transpose(const void* data, DataType data_type, size_t heig
 /// @return The transposed matrix.
 ///
 template <typename T>
-std::vector<uint8_t> transpose(
+std::vector<uint8_t> transpose_with_padding(
     const void* data, size_t height, size_t width, size_t src_stride, size_t dst_stride, size_t dst_size);
+
+///
+/// @tparam T The data type.
+///
+/// @param[in] src The data buffer of the source matrix.
+/// @param[in] height The number of rows of the source matrix.
+/// @param[in] width The number of columns of the source matrix.
+///
+/// @return The transposed matrix.
+template <typename T>
+std::vector<uint8_t> transpose(const void* src, size_t height, size_t width);
 
 }  // namespace kai::test

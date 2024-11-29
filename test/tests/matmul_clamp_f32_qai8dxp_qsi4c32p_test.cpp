@@ -182,7 +182,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     const auto [ref_rhs_qsi4_transposed, ref_rhs_scales] =
         quantize_symmetric_per_block_dynamic<float, Int4, BFloat16>(ref_rhs_transposed.data(), N, K, bl);
 
-    auto ref_rhs_qsi4 = transpose<Int4>(
+    auto ref_rhs_qsi4 = transpose_with_padding<Int4>(
         ref_rhs_qsi4_transposed.data(), N, K, ref_rhs_qsi4_nxk_stride, ref_rhs_qsi4_kxn_stride,
         ref_rhs_qsi4_kxn_size_bytes);
 

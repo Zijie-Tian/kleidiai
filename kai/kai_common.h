@@ -175,6 +175,19 @@ struct kai_rhs_pack_qs4cxs1s0_param {
     uint8_t rhs_zero_point; /**< RHS Matrix quantization zero-point */
 };
 
+/// RHS packing parameter for 8-bit quantization.
+struct kai_rhs_pack_qsi8_params {
+    int32_t lhs_zero_point;  ///< LHS quantization zero point.
+    float scale_multiplier;  ///< Product of input (refers to lhs and rhs) and output quantization scales.
+};
+
+/// Requantization and clamp parameters for GEMM/GEMV output stage.
+struct kai_matmul_requantize32_params {
+    int32_t min_value;          ///< Minimum output value.
+    int32_t max_value;          ///< Maximum output value.
+    int32_t output_zero_point;  ///< Output quantization zero point.
+};
+
 #ifdef __cplusplus
 }
 #endif

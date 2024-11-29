@@ -152,6 +152,13 @@ kai_c_library(
     ],
 )
 
+kai_c_library(
+    name = "clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa",
+    srcs = ["matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa.c"],
+    hdrs = ["matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa.h"],
+    cpu_uarch = kai_cpu_sme(),
+)
+
 cc_library(
     name = "clamp_f32_qai8dxp_qsi4cxp_interface",
     hdrs = ["matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp_qsi4cxp_interface.h"],
@@ -313,6 +320,13 @@ kai_c_library(
 )
 
 kai_c_library(
+    name = "lhs_pack_x8p2vlx4_x8_sme",
+    srcs = ["pack/kai_lhs_pack_x8p2vlx4_x8_sme.c"],
+    hdrs = ["pack/kai_lhs_pack_x8p2vlx4_x8_sme.h"],
+    cpu_uarch = kai_cpu_sme(),
+)
+
+kai_c_library(
     name = "rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon",
     srcs = ["pack/kai_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon.c"],
     hdrs = ["pack/kai_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon.h"],
@@ -365,6 +379,13 @@ kai_c_library(
     name = "rhs_pack_kxn_f32p16vlx1b_f32_f32_sme",
     srcs = ["pack/kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme.c"],
     hdrs = ["pack/kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme.h"],
+    cpu_uarch = kai_cpu_sme(),
+)
+
+kai_c_library(
+    name = "rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme",
+    srcs = ["pack/kai_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.c"],
+    hdrs = ["pack/kai_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.h"],
     cpu_uarch = kai_cpu_sme(),
 )
 
@@ -540,10 +561,12 @@ kai_c_library(
         ":clamp_f32_qsi8d32p_qsi4c32p_dotprod",
         ":clamp_f32_qsi8d32p_qsi4c32p_i8mm",
         ":clamp_f32_qsi8d32p_qsi4c32p_interface",
+        ":clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa",
         ":kai_files_sme",
         ":kai_files_sme2",
         ":lhs_pack_bf16p8x4_f16_neon",
         ":lhs_pack_f32p2vlx1_f32_sme",
+        ":lhs_pack_x8p2vlx4_x8_sme",
         ":lhs_quant_pack_bf16p1x4_f32_neon",
         ":lhs_quant_pack_bf16p8x4_f32_neon",
         ":lhs_quant_pack_qai8dxp_f32",
@@ -556,6 +579,7 @@ kai_c_library(
         ":rhs_pack_kxn_f32pbiasf32_f32_f32_neon",
         ":rhs_pack_kxn_qsi4c32p_qsu4c32s1s0",
         ":rhs_pack_kxn_qsi4cxp_qs4cxs1s0",
+        ":rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme",
         ":rhs_pack_kxn_qsi8cxp_qsi8cx_neon",
         ":rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme",
         ":rhs_pack_nxk_qsi4c32p_qsu4c32s1s0",
