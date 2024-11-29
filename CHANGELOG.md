@@ -11,8 +11,24 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 ## v0.5.0
 
 - New Advanced SIMD micro-kernels:
-  - New micro-kernels to compute the matrix multiplication of dynamically quantized symmetric signed 8-bit integer with per-block quantization (QSI8D32) LHS and quantized symmetric 4-bit signed integer with per-block quantization (QSI4C32) RHS. The destination matrix data type is single-precision floating-point (F32). The micro-kernels have been optimized using the Arm® CPU feature FEAT_DotProd.
-  - Micro-kernels to compute the matrix multiplication of dynamically quantized asymmetric signed 8-bit integer with per-row quantization (QAI8DX) LHS and quantized symmetric 8-bit signed integer with per-channel quantization (QSI4CX) RHS. The destination matrix data type is single-precision floating-point (F32). The micro-kernels have been optimized using Arm® Neon™ technology with the Arm® CPU feature FEAT_DotProd and FEAT_I8MM.
+  - Matrix multiplication (MxN and 1xN) of QSI8D32 LHS (dynamic 8-bit integer per-block quantized) and QSI4C32 RHS (4-bit integer per-block quantized) to produce F32 output.
+    - Optimizations for FEAT_DotProd.
+  - Matrix multiplication (MxN and 1xN) of QAI8DX LHS (dynamic 8-bit integer per-row quantized) and QSI4CX RHS (4-bit integer per-channel quantized) to produce F32 output.
+    - Optimizations for FEAT_DotProd and FEAT_I8MM.
+    - Packing micro-kernels for LHS and non-transposed and transposed RHS.
+  - Matrix multiplication (MxN) of BF16 LHS and BF16 RHS to produce F16 output.
+    - Packing micro-kernels for LHS and non-transposed RHS.
+- New SME micro-kernels:
+  - Matrix multiplication (MxN and 1xN) of F16 LHS and F16 RHS to produce F16 output.
+    - Packing micro-kernels for LHS and non-transposed and transposed RHS.
+  - Matrix multiplication (MxN) of QAI8 LHS and QSI8 RHS to produce QAI8 output.
+    - Packing micro-kernels for LHS and non-transposed RHS.
+- Fixes:
+  - Fixes relating to illegal instruction errors on systems with SME but without SVE support:
+    - Contain SME assembly inside the SMSTART and SMSTOP boundary.
+    - Disable compiler generated SVE instructions by adding the -fno-tree-vectorize compiler option to the build.
+  - Fix build warnings in the core library introduced by the -Wpedantic compiler option.
+  - Fix typos in the micro-kernel interface files.
 
 ## v0.4.0
 
