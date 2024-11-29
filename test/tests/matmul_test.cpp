@@ -41,6 +41,9 @@
 #include "kai/ukernels/matmul/pack/kai_lhs_pack_x16p2vlx2_x16_sme.h"
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme.h"
 
+// matmul_clamp_f16_f16_f16p
+#include "kai/ukernels/matmul/matmul_clamp_f16_f16_f16p/kai_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot.h"
+
 // matmul_nt_nt_fp32_fp32_fp32_2vlx2vl_sme2_mopa
 #include "kai/ukernels/matmul/matmul_clamp_f32_f32p_f32p/kai_matmul_clamp_f32_f32p2vlx1_f32p2vlx1biasf32_sme2_mopa.h"
 #include "kai/ukernels/matmul/pack/kai_lhs_pack_f32p2vlx1_f32_sme.h"
@@ -275,6 +278,68 @@ static const std::array matmul_methods = {
         .fn_matmul_f16_f16p_f16p = nullptr,
         .fn_matmul_f32_f32p_f32p = kai_run_matmul_clamp_f32_f32p2vlx1_f32p2vlx1biasf32_sme2_mopa,
     },
+};
+
+/// List of supported vector by meatrix multiplication methods
+static const std::array vecmul_methods{
+    MatMulMethod{
+        .name = "vecmul_kxn_f16_f16_f16p2vlx2b_1x16vl_sme2_dot",
+
+        .m0 = 1,
+        .n0 = 16 * get_sme_vector_length<float>(),
+
+        .dst_format = DataFormat(DataType::FP16),
+        .lhs_format = DataFormat(DataType::FP16),
+        .packed_lhs_format = DataFormat(DataType::UNKNOWN),
+        .rhs_format = DataFormat(DataType::FP16),
+        .packed_rhs_format = DataFormat(
+            DataType::FP16,                          // Output type
+            2 * get_sme_vector_length<float>(), 2,   // Block size
+            DataFormat::PackFormat::BIAS_PER_ROW,    // Data layout
+            DataType::FP16,                          // Bias format
+            DataType::UNKNOWN,                       // Scaling type
+            2 * get_sme_vector_length<float>(), 2),  // Sub-block
+        .bias_format = DataFormat(DataType::FP16),
+
+        .fn_is_supported = cpu_has_sme2,
+        .fn_get_mr = nullptr,
+        .fn_get_nr = kai_get_nr_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_get_kr = kai_get_kr_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_get_sr = kai_get_sr_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+
+        .fn_get_main_m_step = kai_get_m_step_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_get_pack_rhs_n_step = kai_get_n_step_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+        .fn_get_main_n_step = kai_get_n_step_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+
+        .fn_get_lhs_offset = kai_get_lhs_offset_lhs_pack_x16p2vlx2_x16_sme,
+        .fn_get_packed_lhs_size = nullptr,
+        .fn_get_packed_lhs_offset = nullptr,
+        .fn_pack_lhs = nullptr,
+
+        .fn_get_rhs_offset = kai_get_rhs_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+        .fn_get_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+        .fn_get_pack_rhs_packed_rhs_offset = kai_get_rhs_packed_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+        .fn_get_main_packed_rhs_offset = kai_get_rhs_packed_offset_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_pack_rhs = kai_run_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+
+        .fn_pack_rhs_nxk_get_n_step = nullptr,
+        .fn_pack_rhs_nxk_get_rhs_offset = nullptr,
+        .fn_pack_rhs_nxk_get_bias_offset = nullptr,
+        .fn_pack_rhs_nxk_get_packed_rhs_offset = nullptr,
+        .fn_pack_rhs_nxk_get_packed_rhs_size = nullptr,
+        .fn_pack_rhs_nxk = nullptr,
+
+        .fn_get_bias_offset = kai_get_bias_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme,
+
+        .fn_get_dst_offset = kai_get_dst_offset_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_get_dst_size = kai_get_dst_size_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+
+        .fn_matmul_f16_f16_f16p = kai_run_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot,
+        .fn_matmul_f32_f32_f32p = nullptr,
+        .fn_matmul_f16_f16p_f16p = nullptr,
+        .fn_matmul_f32_f32p_f32p = nullptr,
+    },
+
 };
 
 /// Matrix multiplication test fixture.
@@ -688,6 +753,26 @@ INSTANTIATE_TEST_SUITE_P(
             MatrixPortion(0, 0, 1, 1),        // Full matrix.
             MatrixPortion(0, 0, 0.25, 0.25),  // Top-left corner.
             MatrixPortion(0.75, 0.75, 1, 1)   // Bottom-right corner.
+            )),
+    testing::PrintToStringParamName());
+
+INSTANTIATE_TEST_SUITE_P(
+    VecMul, MatMulTest,
+    testing::Combine(
+        testing::ValuesIn(vecmul_methods),
+        testing::Values(
+            MatMulShape{1, 16, 16},  //
+            MatMulShape{1, 1, 20},   //
+            MatMulShape{1, 16, 32},  //
+            MatMulShape{1, 32, 17},  //
+            MatMulShape{1, 33, 23},  //
+            MatMulShape{1, 93, 56}   //
+            ),
+        testing::Values(
+            MatrixPortion(0, 0, 1, 1),      // Full row.
+            MatrixPortion(0, 0, 1, 0.5),    // First half
+            MatrixPortion(0, .25, 1, 0.5),  // mid row-section.
+            MatrixPortion(0, 0.75, 1, 1)    // right row section
             )),
     testing::PrintToStringParamName());
 
