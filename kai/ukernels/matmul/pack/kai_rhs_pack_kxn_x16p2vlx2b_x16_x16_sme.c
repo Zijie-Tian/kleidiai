@@ -36,7 +36,7 @@ size_t kai_get_bias_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t n_idx) {
     return n_idx * kai_num_bytes_bias;
 }
 
-static size_t kai_get_rhs_packed_stride_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t k) {
+size_t kai_get_rhs_packed_stride_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t k) {
     return kai_get_n_step_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme() *
         (kai_num_bytes_bias + kai_roundup(k, kai_kr) * kai_num_bytes_output);
 }

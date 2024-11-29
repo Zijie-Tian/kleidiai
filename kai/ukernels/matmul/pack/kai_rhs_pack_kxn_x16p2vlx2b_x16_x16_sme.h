@@ -33,6 +33,13 @@ size_t kai_get_rhs_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t n_idx);
 /// @return The offset in bytes to the data element.
 size_t kai_get_bias_offset_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t n_idx);
 
+/// Get the row stride in bytes to the packed RHS matrix
+///
+/// @param[in] k Number of rows in unpacked RHS
+///
+/// @return Row stride in bytes
+size_t kai_get_rhs_packed_stride_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme(size_t k);
+
 /// Gets the offset in bytes to the data element in the packed RHS buffer.
 ///
 /// @param[in] n_idx Column index. Must be divisible by `n_step`
