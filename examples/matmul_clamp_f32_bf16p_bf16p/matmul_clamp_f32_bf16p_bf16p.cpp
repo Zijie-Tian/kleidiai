@@ -234,7 +234,6 @@ int main() {
         fill_matrix(1, N, bias, 0.2);
 
 #ifdef KAI_DEBUG
-        // std::cout << "Floats: " << std::endl;
         print_matrix(M, K, "lhs", lhs);
         print_matrix(K, N, "rhs", rhs);
         print_matrix(1, N, "bias", bias);
