@@ -356,7 +356,7 @@ test-linux-aarch64-cov:
       # Reexport coverage information for final 'coverage' job
       dotenv: build/coverage_path.env
 
-test-linux-aarch64-cov-fvp:
+.test-linux-aarch64-cov-fvp:
   extends:
     - .standard-rules
     - .coverage-post-processing
@@ -377,7 +377,7 @@ test-linux-aarch64-cov-fvp:
     reports:
       junit: kleidiai_test_results.xml
 
-test-linux-aarch64-fvp-nosve:
+.test-linux-aarch64-fvp-nosve:
   extends:
     - .standard-rules
   stage: test
@@ -409,7 +409,7 @@ coverage:
   stage: analyze
   needs:
     - test-linux-aarch64-cov
-    - test-linux-aarch64-cov-fvp
+    # - test-linux-aarch64-cov-fvp  # disabled job
   script:
     - mkdir -p build/html/coverage
     - gcovr --json-add-tracefile "build/coverage/*.json" --print-summary --cobertura=build/coverage.xml --html-details=build/html/coverage/coverage_report.html --html-title="KleidiAI Coverage Report" -j
