@@ -84,7 +84,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme(siz
 void kai_run_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme(
     size_t num_groups, size_t n, size_t k, size_t nr, size_t kr, size_t sr, size_t rhs_stride, const void* rhs,
     const void* bias, const void* scale, void* rhs_packed, size_t extra_bytes,
-    const struct kai_rhs_pack_qsi8_params* params);
+    const struct kai_rhs_pack_qsi8cx_params* params);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -166,19 +166,14 @@ inline static int8_t kai_ext_sign_i8_i4(int8_t value) {
 
 /// Parameter struct for RHS matrix packing (Quantized Symmetric Integer 8-bit with per-channel quantization)
 struct kai_rhs_pack_qsi8cx_params {
-    int8_t lhs_zero_point; /**< LHS Matrix quantization zero-point */
+    int32_t lhs_zero_point;  ///< LHS Matrix quantization zero-point
+    float scale_multiplier;  ///< Product of input (refers to lhs and rhs) and output quantization scales.
 };
 
 /// Parameter struct for RHS matrix packing
 struct kai_rhs_pack_qs4cxs1s0_param {
-    int8_t lhs_zero_point;  /**< LHS Matrix quantization zero-point */
-    uint8_t rhs_zero_point; /**< RHS Matrix quantization zero-point */
-};
-
-/// RHS packing parameter for 8-bit quantization.
-struct kai_rhs_pack_qsi8_params {
-    int32_t lhs_zero_point;  ///< LHS quantization zero point.
-    float scale_multiplier;  ///< Product of input (refers to lhs and rhs) and output quantization scales.
+    int8_t lhs_zero_point;   ///< LHS Matrix quantization zero-point
+    uint8_t rhs_zero_point;  ///< RHS Matrix quantization zero-point
 };
 
 /// Requantization and clamp parameters for GEMM/GEMV output stage.

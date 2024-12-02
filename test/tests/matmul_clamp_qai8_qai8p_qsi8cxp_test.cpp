@@ -58,7 +58,7 @@ struct GemmVariant {
     void (*fn_pack_rhs_run)(
         size_t num_groups, size_t n, size_t k, size_t nr, size_t kr, size_t sr, size_t rhs_stride, const void* rhs,
         const void* bias, const void* scale, void* rhs_packed, size_t extra_bytes,
-        const struct kai_rhs_pack_qsi8_params* params);
+        const struct kai_rhs_pack_qsi8cx_params* params);
 
     size_t (*fn_main_get_m_step)();
     size_t (*fn_main_get_n_step)();
@@ -295,7 +295,7 @@ void run_test(const GemmShape& shape, const GemmVariant& variant, const MatrixPo
         const auto imp_scale_offset = variant.fn_pack_rhs_get_scale_offset(output_area.start_col());
         const auto imp_packed_rhs_offset = variant.fn_pack_rhs_get_packed_rhs_offset(output_area.start_col(), shape.k);
 
-        const kai_rhs_pack_qsi8_params imp_pack_rhs_params{
+        const kai_rhs_pack_qsi8cx_params imp_pack_rhs_params{
             .lhs_zero_point = lhs_zero_point,
             .scale_multiplier = lhs_scale / dst_scale,
         };

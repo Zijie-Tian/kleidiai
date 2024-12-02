@@ -71,7 +71,7 @@ void kai_run_rhs_pack_kxn_qsi8cxp_qsi8cx_neon(
     KAI_ASSERT(rhs_packed != NULL);
     KAI_ASSERT(params != NULL);
 
-    const int32_t lhs_zero_point = (int32_t)params->lhs_zero_point;
+    const int32_t lhs_zero_point = params->lhs_zero_point;
     const size_t rhs_packed_stride = kai_get_rhs_packed_stride_rhs_pack_kxn_qsi8cxp_qsi8cx_neon(k, nr, kr, sr);
     const size_t k_internal = kai_k_roundedup(k);
     const size_t dst_num_rows = kai_roundup(n, nr) / nr;

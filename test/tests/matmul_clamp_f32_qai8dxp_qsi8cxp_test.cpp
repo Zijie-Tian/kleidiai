@@ -94,7 +94,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi8cxp, EndToEnd_RHS_nxk_qsi8cx) {
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_nxk_qsi8cxp_qsi8cx_neon(N, K, nr, kr, sr);
 
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
-    const kai_rhs_pack_qsi8cx_params params{.lhs_zero_point = 1};
+    const kai_rhs_pack_qsi8cx_params params{.lhs_zero_point = 1, .scale_multiplier = 1.0f};
     kai_run_rhs_pack_nxk_qsi8cxp_qsi8cx_neon(
         1, N, K, nr, kr, sr, reinterpret_cast<const int8_t*>(ref_rhs_qsi8.data()),
         reinterpret_cast<const float*>(ref_biases.data()), reinterpret_cast<const float*>(ref_rhs_scales.data()),
@@ -183,7 +183,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi8cxp, EndToEnd_RHS_kxn_qsi8cx) {
     const auto imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_nxk_qsi8cxp_qsi8cx_neon(N, K, nr, kr, sr);
 
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
-    const kai_rhs_pack_qsi8cx_params params{.lhs_zero_point = 1};
+    const kai_rhs_pack_qsi8cx_params params{.lhs_zero_point = 1, .scale_multiplier = 1.0f};
     kai_run_rhs_pack_nxk_qsi8cxp_qsi8cx_neon(
         1, N, K, nr, kr, sr, reinterpret_cast<const int8_t*>(ref_rhs_qsi8.data()),
         reinterpret_cast<const float*>(ref_biases.data()), reinterpret_cast<const float*>(ref_rhs_scales.data()),
