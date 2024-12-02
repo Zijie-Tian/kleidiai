@@ -77,8 +77,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
 
 void kai_run_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
     size_t num_groups, size_t n, size_t k, size_t nr, size_t kr, size_t sr, size_t bl, const uint8_t* rhs,
-    const float* bias, void* rhs_packed, size_t extra_bytes,
-    const struct kai_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0_params* params) {
+    const float* bias, void* rhs_packed, size_t extra_bytes, const struct kai_rhs_pack_qs4cxs1s0_param* params) {
     KAI_ASSUME(bl == kai_bl);
     KAI_ASSUME(num_groups == 1);
     KAI_ASSUME((k % 2) == 0);

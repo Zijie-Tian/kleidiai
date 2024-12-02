@@ -6,6 +6,8 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+project(kai_example_matmul_clamp_f32_qsi8d32p_qsi4c32p)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(KLEIDIAI_PATH ../../)

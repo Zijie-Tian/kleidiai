@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
 
         // If the RHS matrix contains constant values, the packing can be performed
         // only once
-        struct kai_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0_params params;
+        struct kai_rhs_pack_qs4cxs1s0_param params;
         params.lhs_zero_point = 1;
         params.rhs_zero_point = 8;
 

@@ -5,8 +5,7 @@
 //
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "kai/kai_common.h"
 
@@ -29,7 +28,7 @@ extern "C" {
 /// @param[in] rhs_stride The number of bytes in in each row of the RHS matrix (not packed)
 ///
 /// @return the offset in bytes to the RHS matrix (not packed)
-size_t kai_get_rhs_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
+size_t kai_get_rhs_offset_rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon(
     size_t n_idx,        //
     size_t rhs_stride);  //
 
@@ -43,7 +42,7 @@ size_t kai_get_rhs_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
 /// multiple of 32.
 ///
 /// @return the offset in bytes to the packed RHS matrix
-size_t kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
+size_t kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon(
     size_t n_idx,  //
     size_t k,      //
     size_t nr,     //
@@ -60,7 +59,7 @@ size_t kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
 /// of 32.
 ///
 /// @return the packed RHS matrix size in bytes
-size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
+size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon(
     size_t n,    //
     size_t k,    //
     size_t nr,   //
@@ -88,7 +87,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
 /// @param[out] rhs_packed  The packed RHS matrix.
 /// @param[in]  extra_bytes Extra bytes to append to the end of each row of the packed RHS matrix.
 /// @param[in]  params      Parameters for the micro-kernel.
-void kai_run_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0(
+void kai_run_rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon(
     size_t num_groups,                                   //
     size_t n,                                            //
     size_t k,                                            //

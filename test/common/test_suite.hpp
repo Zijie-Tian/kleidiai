@@ -28,6 +28,13 @@
          kai_run_matmul_##name},                     \
             "kai_matmul_" #name, (features_check)    \
     }
+#define UKERNEL_MATMUL_PACK_VARIANT(name, features_check, lhs_pack, rhs_pack)                           \
+    {                                                                                                   \
+        UKERNEL_MATMUL_VARIANT(name, features_check), {                                                 \
+            kai_get_lhs_packed_size_##lhs_pack, kai_get_rhs_packed_size_##rhs_pack, kai_run_##lhs_pack, \
+                kai_run_##rhs_pack                                                                      \
+        }                                                                                               \
+    }
 
 namespace kai::test {
 
@@ -45,6 +52,12 @@ struct UkernelVariant {
     std::function<bool(void)> fn_is_supported;
 };
 
+template <typename T, typename P>
+struct UkernelPackVariant {
+    /// Interface for testing variant.
+    UkernelVariant<T> ukernel;
+    P pack_interface;
+};
 /// Matrix multiplication shape.
 struct MatMulShape {
     size_t m{};  ///< LHS height.

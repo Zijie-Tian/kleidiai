@@ -120,7 +120,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
 /// @param[in]  bl           The block length, which defines the number of
 ///                          K values stored in a single block. It must be a multiple of 32.
 /// @param[in]  rhs          The RHS matrix containing the 4-bit values.
-///                          Size in bytes is expected to be greater than or equal to n/// k/// (sizeof(uint8_t) / 2).
+///                          Size in bytes is expected to be greater than or equal to n * k * (sizeof(uint8_t) / 2).
 /// @param[in]  rhs_stride   The number of bytes per row in bytes of the RHS matrix
 /// @param[in]  bias         The biases.
 /// @param[in]  scale        The per-block quantization scales.

@@ -23,6 +23,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
     - Packing micro-kernels for LHS and non-transposed and transposed RHS.
   - Matrix multiplication (MxN) of QAI8 LHS and QSI8 RHS to produce QAI8 output.
     - Packing micro-kernels for LHS and non-transposed RHS.
+  - Matrix multiplication (MxN and 1xN) of QSI8D32 LHS and QSI4C32 RHS to produce F32 output
+- Packing micro-kernels for QSI8D32 LHS and non-transposed QSI4C32 RHS, to work with the SME matrix multiplication (MxN and 1xN) micro-kernels.
 - Fixes:
   - Fixes relating to illegal instruction errors on systems with SME but without SVE support:
     - Contain SME assembly inside the SMSTART and SMSTOP boundary.
