@@ -69,7 +69,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_x16p2vlx2b_x16_x16_sme(size_t n, siz
 /// @param[in] num_groups Number of groups. It must be 1.
 /// @param[in] n Number of columns of the output matrix.
 /// @param[in] k Common dimension between the LHS and RHS matrix.
-/// @param[in] nr Block size in N dimension. It must be 2 * kai_get_sme_vector_length_u16().
+/// @param[in] nr Block size in N dimension. It must match kai_get_n_step_rhs_pack_nxk_x16p2vlx2b_x16_x16_sme().
 /// @param[in] kr Block size in K dimension. It must be 2.
 /// @param[in] sr Number of kr splits. It must be 1.
 /// @param[in] rhs_stride Row stride in bytes of the RHS matrix.

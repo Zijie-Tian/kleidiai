@@ -22,7 +22,7 @@ static size_t kai_get_mr_lhs_pack_x16p2vlx2_x16_sme(void) {
 }
 
 size_t kai_get_m_step_lhs_pack_x16p2vlx2_x16_sme(size_t mr) {
-    KAI_ASSUME(mr == kai_mr * kai_get_sme_vector_length_u16());
+    KAI_ASSUME(mr == kai_get_mr_lhs_pack_x16p2vlx2_x16_sme());
     KAI_UNUSED(mr);
 
     return kai_get_mr_lhs_pack_x16p2vlx2_x16_sme();

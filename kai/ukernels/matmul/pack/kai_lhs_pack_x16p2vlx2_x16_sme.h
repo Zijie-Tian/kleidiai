@@ -61,7 +61,7 @@ size_t kai_get_lhs_packed_size_lhs_pack_x16p2vlx2_x16_sme(size_t m, size_t k, si
 ///
 /// @param[in] m Number of rows of the unpacked LHS matrix.
 /// @param[in] k Common dimension between the LHS and RHS matrix.
-/// @param[in] mr Block size in M dimension. It must be 2 * kai_get_sme_vector_length_u16().
+/// @param[in] mr Block size in M dimension. It must be kai_get_m_step_lhs_pack_x16p2vlx2_x16_sme().
 /// @param[in] kr Block size in K dimension. It must be 2.
 /// @param[in] sr Number of kr splits. It must be 1.
 /// @param[in] m_idx_start Unused. Must be 0.
