@@ -399,6 +399,12 @@ std::vector<uint8_t> matmul_clamp_nt_nt(
     return dst;
 }
 
+template std::vector<uint8_t> matmul_clamp_nt_nt<int8_t, float, int32_t, int8_t, float, int32_t, float, int32_t, float>(
+    size_t m, size_t n, size_t k,                                                                       //
+    const void* lhs_data, const void* lhs_scales, const void* lhs_zero_points, size_t lhs_quant_width,  //
+    const void* rhs_data, const void* rhs_scales, const void* rhs_zero_points, size_t rhs_quant_width,  //
+    const void* biases,                                                                                 //
+    float min_value, float max_value);
 template std::vector<uint8_t> matmul_clamp_nt_nt<int8_t, float, int32_t, Int4, float, int32_t, float, int32_t, float>(
     size_t m, size_t n, size_t k,                                                                       //
     const void* lhs_data, const void* lhs_scales, const void* lhs_zero_points, size_t lhs_quant_width,  //
