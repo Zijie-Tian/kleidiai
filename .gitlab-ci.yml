@@ -20,6 +20,7 @@ default:
     when:
       - job_execution_timeout
       - stuck_or_timeout_failure
+      - runner_system_failure
 
 .standard-rules:
   timeout: 10m
