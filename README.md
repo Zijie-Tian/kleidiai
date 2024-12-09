@@ -237,7 +237,7 @@ cmake --build ./build
 
 <h1> Release Cadence </h1>
 
-The release is a tagged version of the source code. We intend to make weekly releases.
+Two releases will be done per month. All releases can be found in the [release](https://gitlab.arm.com/kleidi/kleidiai/-/releases) section.
 
 <h1> Support </h1>
 
