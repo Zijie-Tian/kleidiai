@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -31,6 +32,7 @@
 #include "test/common/float16.hpp"
 #include "test/common/int4.hpp"
 #include "test/common/memory.hpp"
+#include "test/common/round.hpp"
 #include "test/common/test_suite.hpp"
 #include "test/reference/cast.hpp"
 #include "test/reference/fill.hpp"
@@ -149,8 +151,8 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
     // Compares the output of the micro-kernels against the output of the reference implementation.
     for (size_t y = 0; y < M; ++y) {
         for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), (y * N) + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), (y * N) + x);
+            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
+            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
             const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
 
             if (rel_error > 0.0001F) {
@@ -172,11 +174,13 @@ INSTANTIATE_TEST_SUITE_P(
             MatMulShape{15, 32, 32},  //
             MatMulShape{77, 99, 64})),
     [](const auto& info) {
-        const std::string name{
-            variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(std::get<size_t>(info.param)).ukernel.name};
+        const auto variant_idx = std::get<0>(info.param);
+        const std::string name{variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_idx).ukernel.name};
         const auto shape = std::get<MatMulShape>(info.param);
-        return name + "__M_" + std::to_string(shape.m) + "__N_" + std::to_string(shape.n) + "__K_" +
-            std::to_string(shape.k);
+
+        std::stringstream sstream;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
+        return sstream.str();
     });
 
 }  // namespace kai::test

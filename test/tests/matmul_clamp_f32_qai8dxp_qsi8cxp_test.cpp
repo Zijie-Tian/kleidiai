@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "kai/ukernels/matmul/matmul_clamp_f32_qai8dxp_qsi8cxp/kai_matmul_clamp_f32_qai8dxp1x4_qsi8cxp4x4_1x4_neon_dotprod.h"
@@ -215,6 +217,15 @@ INSTANTIATE_TEST_SUITE_P(
     MatMul, MatMulTest_f32_qai8dxp_qsi8cxp,
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi8cxp.size()),
-        testing::Values(MatMulShape{17, 33, 67}, MatMulShape{19, 35, 63}, MatMulShape{1, 27, 31})));
+        testing::Values(MatMulShape{17, 33, 67}, MatMulShape{19, 35, 63}, MatMulShape{1, 27, 31})),
+    [](const auto& info) {
+        const auto variant_idx = std::get<0>(info.param);
+        const std::string name{variants_kai_matmul_clamp_f32_qai8dxp_qsi8cxp.at(variant_idx).name};
+        const auto shape = std::get<MatMulShape>(info.param);
+
+        std::stringstream sstream;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
+        return sstream.str();
+    });
 
 }  // namespace kai::test

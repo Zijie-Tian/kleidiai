@@ -9,6 +9,8 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <sstream>
+#include <string>
 #include <tuple>
 
 #include "kai/kai_common.h"
@@ -20,6 +22,7 @@
 #include "test/common/memory.hpp"
 #include "test/common/rect.hpp"
 #include "test/common/sme.hpp"
+#include "test/common/test_suite.hpp"
 #include "test/reference/binary_elementwise.hpp"
 #include "test/reference/clamp.hpp"
 #include "test/reference/fill.hpp"
@@ -75,12 +78,6 @@ struct GemmVariant {
         size_t dst_stride_col, const kai_matmul_requantize32_params* params);
 };
 
-struct GemmShape {
-    size_t m;
-    size_t n;
-    size_t k;
-};
-
 const std::array gemm_variants = {
     GemmVariant{
         .acc_height = 2 * get_sme_vector_length<int32_t>(),
@@ -122,16 +119,16 @@ const std::array gemm_variants = {
 constexpr float output_clamp_rate = 0.1F;  // Clamping 10% the range of the output.
 
 const std::array gemm_shapes = {
-    GemmShape{1, 1, 1},  //
-    GemmShape{
+    MatMulShape{1, 1, 1},  //
+    MatMulShape{
         2 * get_sme_vector_length<int32_t>(), 2 * get_sme_vector_length<int32_t>(),
         sizeof(int32_t) / sizeof(int8_t)},  //
-    GemmShape{20, 30, 40},                  //
-    GemmShape{1, 49, 21},                   //
-    GemmShape{23, 1, 43},                   //
-    GemmShape{32, 14, 1},                   //
-    GemmShape{123, 85, 45},                 //
-    GemmShape{130, 130, 6},
+    MatMulShape{20, 30, 40},                //
+    MatMulShape{1, 49, 21},                 //
+    MatMulShape{23, 1, 43},                 //
+    MatMulShape{32, 14, 1},                 //
+    MatMulShape{123, 85, 45},               //
+    MatMulShape{130, 130, 6},
 };
 
 const std::array output_portions = {
@@ -140,7 +137,7 @@ const std::array output_portions = {
     MatrixPortion(0.75, 0.75, 1, 1),  // Bottom-right corner.
 };
 
-void run_test(const GemmShape& shape, const GemmVariant& variant, const MatrixPortion& output_portion) {
+void run_test(const MatMulShape& shape, const GemmVariant& variant, const MatrixPortion& output_portion) {
     const uint64_t seed = 0;
 
     if (!variant.fn_is_supported()) {
@@ -361,7 +358,7 @@ void run_test(const GemmShape& shape, const GemmVariant& variant, const MatrixPo
     }
 }
 
-using ThisTest = testing::TestWithParam<std::tuple<GemmVariant, GemmShape, MatrixPortion>>;
+using ThisTest = testing::TestWithParam<std::tuple<GemmVariant, MatMulShape, MatrixPortion>>;
 
 TEST_P(ThisTest, EndToEnd) {
     const auto& [variant, shape, output_portion] = GetParam();
@@ -374,6 +371,18 @@ TEST_P(ThisTest, EndToEnd) {
 INSTANTIATE_TEST_SUITE_P(
     matmul_clamp_qai8_qai8p_qsi8cxp, ThisTest,
     testing::Combine(
-        testing::ValuesIn(gemm_variants), testing::ValuesIn(gemm_shapes), testing::ValuesIn(output_portions)));
+        testing::ValuesIn(gemm_variants), testing::ValuesIn(gemm_shapes), testing::ValuesIn(output_portions)),
+    [](const auto& info) {
+        const auto shape = std::get<MatMulShape>(info.param);
+        const auto portion = std::get<MatrixPortion>(info.param);
+
+        std::stringstream sstream;
+        sstream << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k           //
+                << "__PortionStartRow_" << static_cast<int>(portion.start_row() * 1000)  //
+                << "__PortionStartCol_" << static_cast<int>(portion.start_col() * 1000)  //
+                << "__PortionHeight_" << static_cast<int>(portion.height() * 1000)       //
+                << "__PortionWidth_" << static_cast<int>(portion.width() * 1000);
+        return sstream.str();
+    });
 
 }  // namespace kai::test

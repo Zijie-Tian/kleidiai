@@ -11,6 +11,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
+#include <string>
+#include <tuple>
 #include <vector>
 
 #include "kai/kai_common.h"
@@ -25,7 +28,6 @@
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0.h"
 #include "test/common/bfloat16.hpp"
 #include "test/common/cpu_info.hpp"
-#include "test/common/data_type.hpp"
 #include "test/common/int4.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/round.hpp"
@@ -131,8 +133,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     // Compares the output of the micro-kernels against the output of the reference implementation.
     for (size_t y = 0; y < M; ++y) {
         for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), (y * N) + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), (y * N) + x);
+            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
+            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
             const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
 
             if (rel_error > 0.0001F) {
@@ -226,8 +228,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     // Compares the output of the micro-kernels against the output of the reference implementation.
     for (size_t y = 0; y < M; ++y) {
         for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), (y * N) + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), (y * N) + x);
+            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
+            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
             const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
 
             if (rel_error > 0.0001F) {
@@ -241,7 +243,21 @@ INSTANTIATE_TEST_SUITE_P(
     MatMul, MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p,
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi4c32p.size()),
-        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{8, 32, 64}, MatMulShape{17, 25, 33}),
-        testing::Values(32, 64)));
+        testing::Values(
+            MatMulShape{16, 32, 64},  //
+            MatMulShape{8, 32, 64},   //
+            MatMulShape{17, 25, 33},  //
+            MatMulShape{15, 31, 45}),
+        testing::Values(32, 64)),
+    [](const auto& info) {
+        const auto variant_idx = std::get<0>(info.param);
+        const std::string name{variants_kai_matmul_clamp_f32_qai8dxp_qsi4c32p.at(variant_idx).name};
+        const auto shape = std::get<MatMulShape>(info.param);
+        const auto bl = std::get<2>(info.param);
+
+        std::stringstream sstream;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k << "__BL_" << bl;
+        return sstream.str();
+    });
 
 }  // namespace kai::test

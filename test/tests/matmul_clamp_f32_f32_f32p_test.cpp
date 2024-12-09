@@ -130,8 +130,8 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     // Compare the output of the micro-kernels against the output of the reference implementation.
     for (size_t y = 0; y < m; ++y) {
         for (size_t x = 0; x < n; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), (y * n) + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), (y * n) + x);
+            const auto imp_value = read_array<float>(imp_dst.data(), y * n + x);
+            const auto ref_value = read_array<float>(ref_dst.data(), y * n + x);
             const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
 
             if (rel_error > 0.0001F) {
@@ -153,14 +153,13 @@ INSTANTIATE_TEST_SUITE_P(
             MatMulShape{1, 800, 64},  //
             MatMulShape{1, 512, 130}  //
             )),
-    [](const testing::TestParamInfo<MatMulTest_f32_f32_f32p::ParamType>& info) {
-        const uint8_t variant_idx = std::get<0>(info.param);
-        const MatMulShape matmul_shape = std::get<1>(info.param);
+    [](const auto& info) {
+        const auto variant_idx = std::get<0>(info.param);
+        const std::string name{ukernel_variants.at(variant_idx).name};
+        const auto shape = std::get<MatMulShape>(info.param);
 
         std::stringstream sstream;
-        sstream << ukernel_variants[variant_idx].name << "_m_" << matmul_shape.m << "_n_" << matmul_shape.n << "_k_"
-                << matmul_shape.k;
-
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
         return sstream.str();
     });
 

@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "kai/ukernels/matmul/matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod.h"
@@ -54,7 +56,7 @@ static const std::array<UkernelVariant<kai_matmul_clamp_f32_qai8dxp_qsi4cxp_uker
 class MatMulTest_f32_qai8dxp_qsi4cxp : public UkernelVariantTest {};
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
-    auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -133,7 +135,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
     }
 }
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
-    auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -214,7 +216,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
 }
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
-    auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -301,8 +303,9 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
         }
     }
 }
+
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
-    auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -396,6 +399,20 @@ INSTANTIATE_TEST_SUITE_P(
     MatMul, MatMulTest_f32_qai8dxp_qsi4cxp,
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.size()),
-        testing::Values(MatMulShape{16, 32, 64}, MatMulShape{16, 32, 36}, MatMulShape{15, 35, 65})));
+        testing::Values(
+            MatMulShape{16, 32, 64},  //
+            MatMulShape{16, 32, 36},  //
+            MatMulShape{15, 35, 65},  //
+            MatMulShape{8, 32, 64},   //
+            MatMulShape{15, 31, 45})),
+    [](const auto& info) {
+        const auto variant_idx = std::get<0>(info.param);
+        const std::string name{variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_idx).name};
+        const auto shape = std::get<MatMulShape>(info.param);
+
+        std::stringstream sstream;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
+        return sstream.str();
+    });
 
 }  // namespace kai::test
