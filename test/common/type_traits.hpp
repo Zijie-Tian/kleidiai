@@ -6,15 +6,13 @@
 
 #pragma once
 
-#include <cstddef>
 #include <type_traits>
-
-#include "test/common/float16.hpp"
 
 namespace kai::test {
 
 class UInt4;
 class Int4;
+class Float16;
 class BFloat16;
 
 /// `true` if `T` is unsigned numeric type.

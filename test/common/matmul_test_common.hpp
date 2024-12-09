@@ -297,7 +297,7 @@ struct MatMulMethod {
         const void* lhs, size_t lhs_stride,                       //
         const void* packed_rhs,                                   //
         void* dst, size_t dst_stride_row, size_t dst_stride_col,  //
-        Float16 clamp_min, Float16 clamp_max)>
+        __fp16 clamp_min, __fp16 clamp_max)>
         fn_matmul_f16_f16_f16p = nullptr;
 
     std::function<void(
@@ -434,11 +434,11 @@ struct MatMulMethod {
         if (fn_matmul_f16_f16_f16p) {
             fn_matmul_f16_f16_f16p(
                 m, n, k, lhs, lhs_stride, rhs, dst, dst_stride, sizeof(Float16), clamp_min,
-                static_cast<Float16>(clamp_max));
+                static_cast<__fp16>(clamp_max));
         } else if (fn_matmul_f32_f32_f32p) {
             fn_matmul_f32_f32_f32p(
                 m, n, k, lhs, lhs_stride, rhs, dst, dst_stride, sizeof(float), clamp_min,
-                static_cast<Float16>(clamp_max));
+                static_cast<__fp16>(clamp_max));
         } else if (fn_matmul_f16_f16p_f16p) {
             fn_matmul_f16_f16p_f16p(m, n, k, lhs, rhs, dst, dst_stride, sizeof(Float16), clamp_min, clamp_max);
         } else if (fn_matmul_f32_f32p_f32p) {

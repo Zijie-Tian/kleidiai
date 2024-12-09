@@ -123,7 +123,7 @@ bool compare_per_row(
         // Checks the zero points.
         for (size_t i = 0; i < block_height; ++i) {
             const auto imp_zero_point = reinterpret_cast<const Offset*>(imp_ptr)[i];
-            const Offset ref_zero_point = in_roi ? reinterpret_cast<const Offset*>(ref_ptr)[i] : 0;
+            const Offset ref_zero_point = in_roi ? reinterpret_cast<const Offset*>(ref_ptr)[i] : static_cast<Offset>(0);
             const auto [abs_err, rel_err] = calculate_error(imp_zero_point, ref_zero_point);
 
             if (abs_err != 0 || rel_err != 0) {

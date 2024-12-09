@@ -18,6 +18,7 @@
 #include "test/common/bfloat16.hpp"
 #include "test/common/data_format.hpp"
 #include "test/common/data_type.hpp"
+#include "test/common/float16.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/round.hpp"
 

@@ -7,8 +7,14 @@ cmake_minimum_required(VERSION 3.16)
 
 project(KleidiAI
     VERSION 0.5.0
-    LANGUAGES C CXX ASM
+    LANGUAGES C CXX
 )
+
+if(MSVC)
+    enable_language(ASM_MARMASM)
+else()
+    enable_language(ASM)
+endif()
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -31,7 +37,7 @@ endif()
 
 if(MSVC)
     set(KLEIDIAI_WARNING_FLAGS_C
-        "/Wall"
+        # "/Wall" - This flag is disabled until the kernel library is cleaned up.
     )
 else()
     set(KLEIDIAI_WARNING_FLAGS_C
@@ -201,7 +207,7 @@ target_include_directories(kleidiai
 )
 
 target_compile_options(kleidiai
-    PRIVATE "-Wpedantic"
+    PRIVATE $<$<NOT:$<BOOL:${MSVC}>>:-Wpedantic>
     PRIVATE ${KLEIDIAI_WARNING_FLAGS}
 )
 
@@ -210,39 +216,53 @@ if(KLEIDIAI_BUILD_TESTS)
     enable_testing()
     include(GoogleTest)
 
-    add_library(kleidiai_test_framework
-        test/common/data_type.cpp
-        test/common/data_format.cpp
-        test/common/printer.cpp
-        test/common/int4.cpp
-        test/common/compare.cpp
-        test/common/matmul_test_common.cpp
-        test/common/matrix_portion.cpp
-        test/common/rect.cpp
-        test/common/round.cpp
-        test/common/bfloat16.cpp
-        test/common/float16.cpp
-        test/common/cpu_info.cpp
-        test/common/sme.cpp
+    if(MSVC)
+        add_library(kleidiai_test_framework
+            test/common/data_type.cpp
+            test/common/float16.cpp
+            test/common/float16.S
+            test/common/cpu_info.cpp
+        )
+    else()
+        add_library(kleidiai_test_framework
+            test/common/data_type.cpp
+            test/common/data_format.cpp
+            test/common/printer.cpp
+            test/common/int4.cpp
+            test/common/compare.cpp
+            test/common/matmul_test_common.cpp
+            test/common/matrix_portion.cpp
+            test/common/rect.cpp
+            test/common/round.cpp
+            test/common/bfloat16.cpp
+            test/common/float16.cpp
+            test/common/float16.S
+            test/common/cpu_info.cpp
+            test/common/sme.cpp
 
-        test/reference/binary_elementwise.cpp
-        test/reference/matmul.cpp
-        test/reference/matmul_pack.cpp
-        test/reference/fill.cpp
-        test/reference/pack.cpp
-        test/reference/pad.cpp
-        test/reference/clamp.cpp
-        test/reference/quantize.cpp
-        test/reference/reduce.cpp
-        test/reference/transpose.cpp
-        test/reference/cast.cpp
-        test/reference/reorder.cpp
-    )
+            test/reference/binary_elementwise.cpp
+            test/reference/matmul.cpp
+            test/reference/matmul_pack.cpp
+            test/reference/fill.cpp
+            test/reference/pack.cpp
+            test/reference/pad.cpp
+            test/reference/clamp.cpp
+            test/reference/quantize.cpp
+            test/reference/reduce.cpp
+            test/reference/transpose.cpp
+            test/reference/cast.cpp
+            test/reference/reorder.cpp
+        )
+    endif()
 
     target_compile_options(kleidiai_test_framework
         PUBLIC ${KLEIDIAI_WARNING_FLAGS}
-        PUBLIC -march=armv8.2-a+fp16+bf16${KLEIDIAI_INTERNAL_EXTRA_ARCH}
+        PUBLIC $<$<NOT:$<BOOL:${MSVC}>>:-march=armv8.2-a+fp16+bf16${KLEIDIAI_INTERNAL_EXTRA_ARCH}>
     )
+
+    if(MSVC)
+        set_source_files_properties(test/common/float16.S PROPERTIES LANGUAGE ASM_MARMASM)
+    endif()
 
     set_source_files_properties(test/common/sme.cpp PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize;-march=armv8.2-a+sve${KLEIDIAI_INTERNAL_EXTRA_ARCH}")
 
@@ -250,17 +270,24 @@ if(KLEIDIAI_BUILD_TESTS)
         PUBLIC  kleidiai
     )
 
-    add_executable(kleidiai_test
-        test/tests/matmul_test.cpp
-        test/tests/matmul_clamp_f32_f32_f32p_test.cpp
-        test/tests/matmul_clamp_f32_qai8dxp_qsi4cxp_test.cpp
-        test/tests/matmul_clamp_f32_qai8dxp_qsi8cxp_test.cpp
-        test/tests/matmul_clamp_f32_qsi8d32p_qsi4c32p_test.cpp
-        test/tests/matmul_clamp_f32_qai8dxp_qsi4c32p_test.cpp
-        test/tests/matmul_clamp_f16_bf16p_bf16p_test.cpp
-        test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
-        test/tests/matmul_clamp_qai8_qai8p_qsi8cxp_test.cpp
-    )
+    if(MSVC)
+        add_executable(kleidiai_test
+            test/tests/float16_test.cpp
+        )
+    else()
+        add_executable(kleidiai_test
+            test/tests/float16_test.cpp
+            test/tests/matmul_test.cpp
+            test/tests/matmul_clamp_f32_f32_f32p_test.cpp
+            test/tests/matmul_clamp_f32_qai8dxp_qsi4cxp_test.cpp
+            test/tests/matmul_clamp_f32_qai8dxp_qsi8cxp_test.cpp
+            test/tests/matmul_clamp_f32_qsi8d32p_qsi4c32p_test.cpp
+            test/tests/matmul_clamp_f32_qai8dxp_qsi4c32p_test.cpp
+            test/tests/matmul_clamp_f16_bf16p_bf16p_test.cpp
+            test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
+            test/tests/matmul_clamp_qai8_qai8p_qsi8cxp_test.cpp
+        )
+    endif()
 
     target_link_libraries(kleidiai_test
         PRIVATE kleidiai_test_framework

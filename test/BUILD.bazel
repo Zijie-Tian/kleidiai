@@ -18,7 +18,10 @@ package(default_testonly = 1)
 kai_cxx_library(
     name = "common",
     srcs = glob(
-        ["common/*.cpp"],
+        [
+            "common/*.cpp",
+            "common/*.S",
+        ],
         exclude = ["common/sme.cpp"],
     ),
     hdrs = glob(
