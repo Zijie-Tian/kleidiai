@@ -50,6 +50,13 @@ extern "C" {
 #define KAI_MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define KAI_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+/// Gets the version of the project in the Major.Minor.Patch semantic versioning format.
+///
+/// @return Project version as a string literal.
+inline const char* kai_get_version(void) {
+    return "0.5.0";
+}
+
 /// KleidiAI data types
 /// Format: <byte 3>(reserved)|<byte 2>(num-bytes)|<byte 1>(type)|<byte 0>(variant-type)
 enum kai_datatype {
