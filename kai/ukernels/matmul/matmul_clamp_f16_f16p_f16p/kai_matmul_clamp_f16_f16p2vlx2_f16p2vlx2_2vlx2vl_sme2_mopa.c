@@ -8,6 +8,7 @@
 #error This file must be compiled for AArch64, FEAT_SVE2.
 #else  // Architectural features check.
 
+#include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -44,12 +45,12 @@ size_t kai_get_sr_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(void) {
 
 size_t kai_get_lhs_packed_offset_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(size_t m_idx, size_t k) {
     KAI_ASSUME(m_idx % kai_get_m_step_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa() == 0);
-    return m_idx * kai_roundup(k, kai_kr) * sizeof(__fp16);
+    return m_idx * kai_roundup(k, kai_kr) * sizeof(uint16_t);
 }
 
 static size_t kai_get_rhs_packed_stride_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(size_t k) {
     return kai_get_n_step_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa() *
-        (sizeof(__fp16) + kai_roundup(k, kai_kr) * sizeof(__fp16));
+        (sizeof(uint16_t) + kai_roundup(k, kai_kr) * sizeof(uint16_t));
 }
 
 size_t kai_get_rhs_packed_offset_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(size_t n_idx, size_t k) {
@@ -63,17 +64,17 @@ size_t kai_get_dst_offset_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa
     KAI_ASSUME(m_idx % kai_get_m_step_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa() == 0);
     KAI_ASSUME(n_idx % kai_get_n_step_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa() == 0);
 
-    return m_idx * dst_stride + n_idx * sizeof(__fp16);
+    return m_idx * dst_stride + n_idx * sizeof(uint16_t);
 }
 
 size_t kai_get_dst_size_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(size_t m, size_t n) {
-    return m * n * sizeof(__fp16);
+    return m * n * sizeof(uint16_t);
 }
 
 void kai_run_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(
     size_t m, size_t n, size_t k, const void* lhs_packed, const void* rhs_packed, void* dst, size_t dst_stride_row,
-    size_t dst_stride_col, __fp16 clamp_min, __fp16 clamp_max) {
-    KAI_ASSUME(dst_stride_col == sizeof(__fp16));
+    size_t dst_stride_col, float clamp_min, float clamp_max) {
+    KAI_ASSUME(dst_stride_col == sizeof(uint16_t));
 
     typedef struct {
         const void* A;
@@ -82,8 +83,8 @@ void kai_run_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(
         void* C;
         uint64_t ldcb;
         uint64_t M, N, K;
-        __fp16 min;
-        __fp16 max;
+        float16_t min;
+        float16_t max;
 
         void* accumulator_buffer;
         uint64_t flags;
@@ -99,8 +100,8 @@ void kai_run_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(
     args.M = m;
     args.N = n;
     args.K = k;
-    args.min = clamp_min;
-    args.max = clamp_max;
+    args.min = (float16_t)clamp_min;
+    args.max = (float16_t)clamp_max;
 
     args.accumulator_buffer = NULL;
     args.flags = 0;

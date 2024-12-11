@@ -18,6 +18,7 @@
 #include <arm_neon.h>
 
 #include <algorithm>
+#include <cfloat>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -28,9 +29,6 @@
 #include "kai_matmul_clamp_f16_f16_f16p16x1biasf16_6x16x8_neon_mla.h"
 #include "kai_matmul_clamp_f16_f16_f16p_interface.h"
 #include "kai_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon.h"
-
-#define FLOAT16_MIN (-65504)
-#define FLOAT16_MAX (65504)
 
 namespace {
 /// Micro-kernel interface
@@ -48,17 +46,17 @@ constexpr kai_matmul_clamp_f16_f16_f16p_ukernel ukernel{
 
 /// Reference implementation of matrix multiplication
 void run_matmul_ref(
-    size_t m, size_t n, size_t k, const __fp16* lhs, const __fp16* rhs, const __fp16* bias, __fp16* dst,
-    __fp16 scalar_min, __fp16 scalar_max) {
+    size_t m, size_t n, size_t k, const float16_t* lhs, const float16_t* rhs, const float16_t* bias, float16_t* dst,
+    float scalar_min, float scalar_max) {
     for (size_t row_idx = 0; row_idx < m; ++row_idx) {
         for (size_t col_idx = 0; col_idx < n; ++col_idx) {
-            __fp16 acc = bias[col_idx];
+            float16_t acc = bias[col_idx];
 
             for (size_t k_idx = 0; k_idx < k; ++k_idx) {
                 acc += lhs[row_idx * k + k_idx] * rhs[col_idx + n * k_idx];
             }
-            acc = std::max(acc, scalar_min);
-            acc = std::min(acc, scalar_max);
+            acc = std::max(acc, static_cast<float16_t>(scalar_min));
+            acc = std::min(acc, static_cast<float16_t>(scalar_max));
 
             dst[row_idx * n + col_idx] = acc;
         }
@@ -66,14 +64,14 @@ void run_matmul_ref(
 }
 
 /// Fills the matrix with incremental values
-void fill_matrix(size_t num_rows, size_t num_cols, __fp16* dst, const __fp16 weight) {
+void fill_matrix(size_t num_rows, size_t num_cols, float16_t* dst, const float16_t weight) {
     for (size_t i = 0; i < num_rows * num_cols; i++) {
-        dst[i] = __fp16(i * weight);
+        dst[i] = float16_t(i * weight);
     }
 }
 
 /// Print the matrix
-void print_matrix(size_t num_rows, size_t num_cols, const char* name, const __fp16* src) {
+void print_matrix(size_t num_rows, size_t num_cols, const char* name, const float16_t* src) {
     std::cout << name << " = [\n";
     for (size_t y = 0; y < num_rows; ++y) {
         std::cout << "  [";
@@ -86,7 +84,8 @@ void print_matrix(size_t num_rows, size_t num_cols, const char* name, const __fp
 }
 
 /// Verify the micro-kernel output matches the reference implementation
-bool is_output_correct(size_t num_rows, size_t num_cols, const __fp16 tolerance, const __fp16* ref, const __fp16* act) {
+bool is_output_correct(
+    size_t num_rows, size_t num_cols, const float16_t tolerance, const float16_t* ref, const float16_t* act) {
     bool is_valid = true;
 
     for (size_t i = 0; i < num_rows * num_cols; ++i) {
@@ -117,9 +116,9 @@ int main() {
     const size_t dst_size = M * N;
 
     // Allocate the memory
-    __fp16* lhs = new __fp16[lhs_size];
-    __fp16* rhs = new __fp16[rhs_size];
-    __fp16* bias = new __fp16[bias_size];
+    float16_t* lhs = new float16_t[lhs_size];
+    float16_t* rhs = new float16_t[rhs_size];
+    float16_t* bias = new float16_t[bias_size];
 
     fill_matrix(M, K, lhs, 0.1);
     fill_matrix(K, N, rhs, 0.1);
@@ -134,15 +133,15 @@ int main() {
     //----------- REFERENCE IMPLEMENTATION
     //------------------------------------
     //------------------------------------
-    __fp16* dst_ref = new __fp16[dst_size];
+    float16_t* dst_ref = new float16_t[dst_size];
 
     run_matmul_ref(
-        M, N, K,                  // Dimensions
-        lhs,                      // LHS buffer
-        rhs,                      // RHS buffer
-        bias,                     // Bias buffer
-        dst_ref,                  // DST
-        FLOAT16_MIN, FLOAT16_MAX  // Min and max for the clamp operation
+        M, N, K,           // Dimensions
+        lhs,               // LHS buffer
+        rhs,               // RHS buffer
+        bias,              // Bias buffer
+        dst_ref,           // DST
+        -FLT_MAX, FLT_MAX  // Min and max for the clamp operation
     );
     //----------- END REFERENCE IMPLEMENTATION
     //------------------------------------
@@ -158,14 +157,14 @@ int main() {
     // In a single row, we pack nr bias values followed by K rows of nr RHS values
     const size_t rhs_packed_size = kai_get_rhs_packed_size_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon(N, K);
     const size_t rhs_packed_cols = nr + K * nr;
-    const size_t rhs_packed_rows = rhs_packed_size / (rhs_packed_cols * sizeof(__fp16));
+    const size_t rhs_packed_rows = rhs_packed_size / (rhs_packed_cols * sizeof(float16_t));
 
-    __fp16* rhs_packed = new __fp16[rhs_packed_size];
+    float16_t* rhs_packed = new float16_t[rhs_packed_size];
 
-    const size_t lhs_stride = K * sizeof(__fp16);
-    const size_t rhs_stride = N * sizeof(__fp16);
-    const size_t dst_stride_row = N * sizeof(__fp16);
-    const size_t dst_stride_col = sizeof(__fp16);
+    const size_t lhs_stride = K * sizeof(float16_t);
+    const size_t rhs_stride = N * sizeof(float16_t);
+    const size_t dst_stride_row = N * sizeof(float16_t);
+    const size_t dst_stride_col = sizeof(float16_t);
 
     // Packing only needs to be performed once if the contents of the bias and RHS matrices are expected to be constant.
     kai_run_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon(
@@ -183,19 +182,19 @@ int main() {
     print_matrix(rhs_packed_rows, rhs_packed_cols, "rhs_packed", rhs_packed);
 #endif  // KAI_DEBUG
 
-    __fp16* dst = new __fp16[dst_size];
+    float16_t* dst = new float16_t[dst_size];
 
     const auto timer_matmul_start = std::chrono::high_resolution_clock::now();
 
     ukernel.run_matmul(
-        M, N, K,                  // Dimensions
-        lhs,                      // LHS
-        lhs_stride,               // LHS stride
-        rhs_packed,               // RHS packed
-        dst,                      // DST
-        dst_stride_row,           // DST stride (row)
-        dst_stride_col,           // DST stride (col)
-        FLOAT16_MIN, FLOAT16_MAX  // Min and max for the clamp operation
+        M, N, K,           // Dimensions
+        lhs,               // LHS
+        lhs_stride,        // LHS stride
+        rhs_packed,        // RHS packed
+        dst,               // DST
+        dst_stride_row,    // DST stride (row)
+        dst_stride_col,    // DST stride (col)
+        -FLT_MAX, FLT_MAX  // Min and max for the clamp operation
     );
 
     const auto timer_matmul_end = std::chrono::high_resolution_clock::now();

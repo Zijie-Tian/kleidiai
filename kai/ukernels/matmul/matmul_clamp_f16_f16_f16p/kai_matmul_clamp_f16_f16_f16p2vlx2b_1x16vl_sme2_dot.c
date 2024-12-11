@@ -10,6 +10,7 @@
 
 #include "kai_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot.h"
 
+#include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -73,20 +74,20 @@ size_t kai_get_dst_size_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot(size_t m
 
 void kai_run_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot(
     size_t m, size_t n, size_t k, const void* lhs, size_t lhs_stride, const void* rhs_packed, void* dst,
-    size_t dst_stride_row, size_t dst_stride_col, __fp16 clamp_min, __fp16 clamp_max) {
+    size_t dst_stride_row, size_t dst_stride_col, float clamp_min, float clamp_max) {
     KAI_UNUSED(dst_stride_row);
     KAI_UNUSED(dst_stride_col);
     KAI_UNUSED(lhs_stride);
     KAI_ASSERT(m == 1);
 
     typedef struct {
-        __fp16 maxval;
-        __fp16 minval;
+        float16_t maxval;
+        float16_t minval;
     } KernelArgs;
 
     KernelArgs ka;
-    ka.maxval = clamp_max;
-    ka.minval = clamp_min;
+    ka.maxval = (float16_t)clamp_max;
+    ka.minval = (float16_t)clamp_min;
 
     size_t N = n;
     size_t K = k;

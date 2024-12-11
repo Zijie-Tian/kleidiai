@@ -44,7 +44,7 @@ size_t kai_get_lhs_packed_offset_lhs_pack_x16p2vlx2_x16_sme(size_t m_idx, size_t
     KAI_UNUSED(kr);
     KAI_UNUSED(sr);
 
-    return m_idx * kai_roundup(k, kr) * sizeof(__fp16);
+    return m_idx * kai_roundup(k, kr) * sizeof(uint16_t);
 }
 
 size_t kai_get_lhs_packed_size_lhs_pack_x16p2vlx2_x16_sme(size_t m, size_t k, size_t mr, size_t kr, size_t sr) {
@@ -56,7 +56,7 @@ size_t kai_get_lhs_packed_size_lhs_pack_x16p2vlx2_x16_sme(size_t m, size_t k, si
     KAI_UNUSED(kr);
     KAI_UNUSED(sr);
 
-    return kai_roundup(m, kai_get_mr_lhs_pack_x16p2vlx2_x16_sme()) * kai_roundup(k, kai_kr) * sizeof(__fp16);
+    return kai_roundup(m, kai_get_mr_lhs_pack_x16p2vlx2_x16_sme()) * kai_roundup(k, kai_kr) * sizeof(uint16_t);
 }
 
 void kai_run_lhs_pack_x16p2vlx2_x16_sme(
@@ -80,7 +80,7 @@ void kai_run_lhs_pack_x16p2vlx2_x16_sme(
     const uint8_t* lhs_ptr = lhs;
     for (size_t block_y = 0; block_y < m; block_y += block_height) {
         const size_t height = KAI_MIN(m - block_y, block_height);
-        void* out = lhs_packed_ptr + block_y * kai_roundup(k, kai_kr) * sizeof(__fp16);
+        void* out = lhs_packed_ptr + block_y * kai_roundup(k, kai_kr) * sizeof(uint16_t);
 
         for (size_t y = 0; y < height; y++) {
             in[y] = lhs_ptr + (block_y + y) * lhs_stride;

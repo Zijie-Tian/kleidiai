@@ -8,6 +8,11 @@
 
 KleidiAI follows the [Semantic Versioning](https://semver.org/) specification for releases.
 
+## Upcoming release
+
+- Breaking changes:
+  - Change the F16 matrix multiplication function signature to use single-precision floating-point for the clamp values.
+
 ## v0.5.0
 
 - New Advanced SIMD micro-kernels:

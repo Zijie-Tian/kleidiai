@@ -5,6 +5,10 @@
 //
 #pragma once
 
+#if defined(__ARM_NEON)
+#include <arm_neon.h>
+#endif  // defined(__ARM_NEON)
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -87,7 +91,7 @@ inline static size_t kai_get_datatype_size_in_bytes(enum kai_datatype dt) {
 /// @return the f32 value
 #if defined(__ARM_NEON)
 inline static float kai_cast_f32_f16(uint16_t f16) {
-    __fp16 f32 = 0;
+    float16_t f32 = 0;
     memcpy(&f32, &f16, sizeof(uint16_t));
     return (float)f32;
 }
@@ -126,7 +130,7 @@ inline static uint16_t kai_cast_bf16_f32(float f32) {
 #if defined(__ARM_NEON)
 inline static uint16_t kai_cast_f16_f32(float f32) {
     uint16_t f16 = 0;
-    __fp16 tmp = (__fp16)f32;
+    float16_t tmp = (float16_t)f32;
     memcpy(&f16, &tmp, sizeof(uint16_t));
     return f16;
 }

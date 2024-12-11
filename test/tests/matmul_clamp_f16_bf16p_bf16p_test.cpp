@@ -299,7 +299,7 @@ TEST_P(MatMulTestBf16OutFp16, Output) {
 
     ASSERT_EQ(rhs_packed_offset, ref_rhs_packed_offset);
 
-    uintptr_t bias_offset = sizeof(__fp16) * rect.start_col();
+    uintptr_t bias_offset = sizeof(uint16_t) * rect.start_col();
 
     method.fn_pack_rhs(
         1,  // num_groups

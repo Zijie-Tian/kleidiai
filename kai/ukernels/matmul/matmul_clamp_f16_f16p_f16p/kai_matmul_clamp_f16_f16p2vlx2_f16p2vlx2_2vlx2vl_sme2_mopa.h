@@ -105,16 +105,20 @@ size_t kai_get_dst_size_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(s
 /// @param[in] m Number of output rows to be computed.
 /// @param[in] n Number of output columns to be computed.
 /// @param[in] k Common dimension of the LHS and RHS operands.
-/// @param[in] packed_lhs Packed LHS matrix buffer.
-/// @param[in] packed_rhs Packed RHS matrix buffer.
+/// @param[in] lhs_packed Packed LHS matrix buffer.
+/// @param[in] rhs_packed Packed RHS matrix buffer.
 /// @param[out] dst Output matrix buffer.
 /// @param[in] dst_stride_row Row stride in bytes of the output matrix.
 /// @param[in] dst_stride_col Column stride in bytes of the output matrix. Must be 2
 /// @param[in] clamp_min Minimum value to clamp the final result.
 /// @param[in] clamp_max Maximum value to clamp the final result.
+///
+/// @note Clamp minimum and maximum values are cast internally to the destination type before clamping the computed
+/// values.
+///
 void kai_run_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa(
     size_t m, size_t n, size_t k, const void* lhs_packed, const void* rhs_packed, void* dst, size_t dst_stride_row,
-    size_t dst_stride_col, __fp16 clamp_min, __fp16 clamp_max);
+    size_t dst_stride_col, float clamp_min, float clamp_max);
 
 #ifdef __cplusplus
 }  // extern "C"
