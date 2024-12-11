@@ -12,8 +12,6 @@ These routines are tuned to exploit the capabilities of specific Arm® hardware 
 
 The KleidiAI library has been designed for ease of adoption into C or C++ machine learning (ML) and AI frameworks. Specifically, developers looking to incorporate specific micro-kernels into their projects can only include the corresponding <strong>.c</strong> and <strong>.h</strong> files associated with those micro-kernels and a common header file.
 
-> ⚠️ The project has not hit a 1.x.y release yet and it is essential to note that API modifications, including function name changes, and feature enhancements may occur without advance notice.
-
 <h1> Who is this library for? </h1>
 
 KleidiAI is a library for AI/ML framework developers interested in accelerating the computation on Arm® CPUs.
@@ -235,9 +233,16 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/aarch64
 cmake --build ./build
 ```
 
-<h1> Release Cadence </h1>
+<h1> Release </h1>
+<h2> Cadence </h2>
 
 Two releases will be done per month. All releases can be found in the [release](https://gitlab.arm.com/kleidi/kleidiai/-/releases) section.
+
+<h2> Version </h2>
+
+The release version conforms to Semantic Versioning.
+
+> ⚠️ Please note that API modifications, including function name changes, and feature enhancements may occur without advance notice.
 
 <h1> Support </h1>
 
