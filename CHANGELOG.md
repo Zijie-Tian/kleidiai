@@ -15,6 +15,14 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 - Optimizations:
   - Optimize QAI8DXP LHS quant and pack micro-kernel using Arm® Neon™
   - Optimize the NxK scalar RHS packing function for QSU4C32 with BF16 quantization scales
+- Add initial Microsoft® Visual C++™ build support
+- API for querying library version
+- Fixes:
+  - Update QSI8CX tests
+  - Asserts will call `abort()` instead of `exit(...)`
+  - Changed invalid assertion in F16 kernel
+  - Build system improvements
+  - Unit test improvements
 
 ## v0.5.0
 
