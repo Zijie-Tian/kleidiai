@@ -104,6 +104,8 @@ bool is_output_correct(
 }  // namespace
 
 int main() {
+    int ret = 0;
+
     // Parameters of the matrix multiplication. Change these values to see how the micro-kernels operate on different
     // sized matrices
     const size_t M = 6;   // Rows of LHS and DST matrices
@@ -214,7 +216,7 @@ int main() {
         std::cout << "- Performance: " << time_matmul.count() << "ns\n";
     } else {
         std::cout << "- Status: FAILED\n";
-        return 1;
+        ret = 1;
     }
 
     //----------- END MICRO-KERNELS TESTS
@@ -228,6 +230,6 @@ int main() {
     delete[] dst;
     delete[] dst_ref;
 
-    return 0;
+    return ret;
 }
 #endif  // Architectural features check.
