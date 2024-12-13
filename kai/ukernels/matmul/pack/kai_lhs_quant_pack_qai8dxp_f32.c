@@ -100,17 +100,16 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
 #endif
         for (; k_idx < (int32_t)k; ++k_idx) {
             const float src0_0 = *(src_ptr + (size_t)k_idx);
-            max0 = KAI_MAX(src0_0, max0);
-            min0 = KAI_MIN(src0_0, min0);
+            max0 = fmaxf(src0_0, max0);
+            min0 = fminf(src0_0, min0);
         }
 
         // Maximum/minimum int8 values
         const float qmin = (float)INT8_MIN;
         const float qmax = (float)INT8_MAX;
 
-        const float rmin0 = KAI_MIN(0.0F, min0);
-        const float rmax0 = KAI_MAX(0.0F, max0);
-
+        const float rmin0 = fminf(0.0F, min0);
+        const float rmax0 = fmaxf(0.0F, max0);
         const float scale0 = rmin0 == rmax0 ? 1.F : (qmax - qmin) / (rmax0 - rmin0);
 
         // Reciprocal to quantize
@@ -125,8 +124,8 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
         float zero_point0 =
             zero_point_from_min_error0 + zero_point_from_max_error0 > 0 ? qmin - descaled_min0 : qmax - descaled_max0;
 
-        zero_point0 = KAI_MAX(zero_point0, qmin);
-        zero_point0 = KAI_MIN(zero_point0, qmax);
+        zero_point0 = fmaxf(zero_point0, qmin);
+        zero_point0 = fminf(zero_point0, qmax);
 
         // Round to nearest integer
         const int32_t nudged_zero_point0 = (int32_t)rintf(zero_point0);
@@ -138,9 +137,38 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
         // Quantize the channels
         k_idx = 0;
         for (; k_idx < (int32_t)k_internal; k_idx += k_block_len) {
-            for (size_t k_block_idx = 0; k_block_idx < (size_t)k_block_len; ++k_block_idx) {
+            int32_t k_block_idx = 0;
+#if defined(__aarch64__)
+            for (; k_block_idx <= k_block_len - 8; k_block_idx += 8) {
                 // Clamp at the last valid k-index
-                const size_t k_idx_start = KAI_MIN((size_t)k_idx + k_block_idx, k - 1);
+                const size_t k_idx_start = KAI_MIN((size_t)(k_idx + k_block_idx), k - 1);
+
+                const float32x4_t src_0 = vld1q_f32(src_ptr + k_idx_start);
+                const float32x4_t src_1 = vld1q_f32(src_ptr + k_idx_start + 4);
+                // Scale the values
+                float32x4_t v0_f32 = vmulq_n_f32(src_0, scale0);
+                float32x4_t v1_f32 = vmulq_n_f32(src_1, scale0);
+                int32x4_t v0_s32 = vcvtnq_s32_f32(v0_f32);
+                int32x4_t v1_s32 = vcvtnq_s32_f32(v1_f32);
+
+                int16x4_t v0_s16 = vqmovn_s32(v0_s32);
+                int16x4_t v1_s16 = vqmovn_s32(v1_s32);
+                int16x8_t v_s16 = vcombine_s16(v0_s16, v1_s16);
+
+                // Add zero points
+                int16_t nzp_s16 = (int16_t)nudged_zero_point0;
+                int16x8_t vnzp_s16 = vdupq_n_s16(nzp_s16);
+                v_s16 = vaddq_s16(v_s16, vnzp_s16);
+
+                int8x8_t v0_s8 = vqmovn_s16(v_s16);
+                vst1_s8((int8_t*)(dst_ptr), v0_s8);
+                dst_ptr += 8 * sizeof(int8_t);
+            }
+#endif
+            // left over k
+            for (; k_block_idx < k_block_len; ++k_block_idx) {
+                // Clamp at the last valid k-index
+                const size_t k_idx_start = KAI_MIN((size_t)(k_idx + k_block_idx), k - 1);
 
                 const float src0_0 = *(src_ptr + k_idx_start);
 
@@ -148,8 +176,6 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
                 int32_t v0_s32 = (int32_t)(roundf(src0_0 * scale0));
 
                 v0_s32 = v0_s32 + nudged_zero_point0;
-                v0_s32 = KAI_MAX(v0_s32, INT8_MIN);
-                v0_s32 = KAI_MIN(v0_s32, INT8_MAX);
                 *((int8_t*)(dst_ptr)) = (int8_t)v0_s32;
                 dst_ptr += sizeof(int8_t);
             }

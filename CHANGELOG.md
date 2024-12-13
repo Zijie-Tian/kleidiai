@@ -12,6 +12,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 - Breaking changes:
   - Change the F16 matrix multiplication function signature to use single-precision floating-point for the clamp values.
+- Optimizations:
+  - Optimize QAI8DXP LHS quant and pack micro-kernel using Arm® Neon™
 
 ## v0.5.0
 
