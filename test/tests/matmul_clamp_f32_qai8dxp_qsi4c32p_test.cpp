@@ -81,6 +81,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     // Generates input data.
     const auto ref_lhs = fill_random<float>(M * K, seed + 0);
     const auto ref_rhs = fill_random<float>(N * K, seed + 1);
+    const auto ref_biases = fill_random<float>(N, seed + 2);
 
     // Runs the reference implementation.
     //   * Quantizes the LHS matrix using 8-bit asymmetric quantization.
@@ -93,7 +94,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
 
     const auto ref_dst = matmul_clamp_nt_t<int8_t, float, int32_t, Int4, BFloat16, int32_t, float, int32_t, float>(
         M, N, K, ref_lhs_qvalues.data(), ref_lhs_scales.data(), ref_lhs_zero_points.data(), K, ref_rhs_qsi4.data(),
-        ref_rhs_scales.data(), nullptr, bl, nullptr, std::numeric_limits<float>::lowest(),
+        ref_rhs_scales.data(), nullptr, bl, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
     // Runs the LHS packing micro-kernel.
@@ -118,9 +119,9 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     constexpr kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride, nullptr,
-        reinterpret_cast<const float*>(ref_rhs_scales.data()), ref_rhs_scales_stride, imp_packed_rhs.data(), 0,
-        &params);
+        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride,
+        reinterpret_cast<const float*>(ref_biases.data()), reinterpret_cast<const float*>(ref_rhs_scales.data()),
+        ref_rhs_scales_stride, imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);
@@ -166,6 +167,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     // Generates input data.
     const auto ref_lhs = fill_random<float>(M * K, seed + 0);
     const auto ref_rhs_transposed = fill_random<float>(N * K, seed + 1);
+    const auto ref_biases = fill_random<float>(N, seed + 2);
 
     // Transposed(nxk) RHS dimensions
     const size_t ref_rhs_qsi4_nxk_stride = K;
@@ -190,7 +192,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
 
     const auto ref_dst = matmul_clamp_nt_nt<int8_t, float, int32_t, Int4, BFloat16, int32_t, float, int32_t, float>(
         M, N, K, ref_lhs_qvalues.data(), ref_lhs_scales.data(), ref_lhs_zero_points.data(), K, ref_rhs_qsi4.data(),
-        ref_rhs_scales.data(), nullptr, bl, nullptr, std::numeric_limits<float>::lowest(),
+        ref_rhs_scales.data(), nullptr, bl, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
     // Runs the LHS packing micro-kernel.
@@ -214,8 +216,9 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     constexpr kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride, nullptr, ref_rhs_scales.data(),
-        ref_rhs_scales_stride, imp_packed_rhs.data(), 0, &params);
+        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride,
+        reinterpret_cast<const float*>(ref_biases.data()), ref_rhs_scales.data(), ref_rhs_scales_stride,
+        imp_packed_rhs.data(), 0, &params);
 
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);

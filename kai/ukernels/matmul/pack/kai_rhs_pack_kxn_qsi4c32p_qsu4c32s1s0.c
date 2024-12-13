@@ -16,24 +16,24 @@ static const size_t kai_num_bytes_bias = sizeof(float);
 static const size_t kai_nr_multiple_of = 4;
 static const size_t kai_bl_multiple_of = 32;
 
-inline static size_t kai_num_blocks_per_row(size_t k, size_t bl) {
+inline static size_t kai_get_num_blocks_per_row(size_t k, size_t bl) {
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
     return kai_roundup(k, bl) / bl;
 }
 
-inline static size_t kai_num_bytes_per_block(size_t bl, size_t num_bytes_multiplier_rhs) {
+inline static size_t kai_get_num_bytes_per_block(size_t bl, size_t num_bytes_multiplier_rhs) {
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
     return (bl / 2) + num_bytes_multiplier_rhs;
 }
 
-inline static size_t kai_rhs_packed_offset_end_of_all_blocks(
+inline static size_t kai_get_rhs_packed_offset_end_of_all_blocks(
     size_t k, size_t nr, size_t kr, size_t bl, size_t num_bytes_multiplier_rhs) {
     KAI_ASSERT((bl % kr) == 0);
     KAI_ASSERT((nr % kai_nr_multiple_of) == 0);
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
 
-    const size_t num_blocks_per_row = kai_num_blocks_per_row(k, bl);
-    const size_t num_bytes_per_block = kai_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
+    const size_t num_blocks_per_row = kai_get_num_blocks_per_row(k, bl);
+    const size_t num_bytes_per_block = kai_get_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
 
     return (nr * num_bytes_per_block * num_blocks_per_row);
 }
@@ -66,8 +66,8 @@ size_t kai_get_rhs_packed_stride_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
     KAI_UNUSED(sr);
 
     const size_t num_bytes_multiplier_rhs = kai_get_datatype_size_in_bytes(scale_dt);
-    const size_t num_blocks_per_row = kai_num_blocks_per_row(k, bl);
-    const size_t num_bytes_per_block = kai_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
+    const size_t num_blocks_per_row = kai_get_num_blocks_per_row(k, bl);
+    const size_t num_bytes_per_block = kai_get_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
 
     return nr * ((num_bytes_per_block * num_blocks_per_row) + kai_num_bytes_sum_rhs + kai_num_bytes_bias);
 }
@@ -145,9 +145,9 @@ void kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
     const size_t rhs_packed_stride =
         kai_get_rhs_packed_stride_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(k, nr, kr, sr, bl, params->scale_dt);
     const size_t rhs_packed_offset_end_of_all_blocks =
-        kai_rhs_packed_offset_end_of_all_blocks(k, nr, kr, bl, num_bytes_multiplier_rhs);
-    const size_t num_qblocks_per_row = kai_num_blocks_per_row(k, bl);
-    const size_t num_bytes_per_block = kai_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
+        kai_get_rhs_packed_offset_end_of_all_blocks(k, nr, kr, bl, num_bytes_multiplier_rhs);
+    const size_t num_qblocks_per_row = kai_get_num_blocks_per_row(k, bl);
+    const size_t num_bytes_per_block = kai_get_num_bytes_per_block(bl, num_bytes_multiplier_rhs);
     const size_t num_bytes_per_block_k = bl / 2;
     const size_t dst_num_rows = kai_roundup(n, nr) / nr;
     const size_t k_interleaved_v = 16U;
