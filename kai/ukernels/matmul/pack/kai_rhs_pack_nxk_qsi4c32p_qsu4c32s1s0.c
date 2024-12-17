@@ -55,6 +55,7 @@ size_t kai_get_rhs_packed_stride_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
     size_t sr,  //
     size_t bl,  //
     enum kai_datatype scale_dt) {
+    KAI_ASSERT((k % bl) == 0);
     KAI_ASSERT((bl % kr) == 0);
     KAI_ASSERT((nr % kai_nr_multiple_of) == 0);
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
@@ -79,6 +80,7 @@ size_t kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
     size_t bl,     //
     enum kai_datatype scale_dt) {
     KAI_ASSERT((n_idx % nr) == 0);
+    KAI_ASSERT((k % bl) == 0);
     KAI_ASSERT((bl % kr) == 0);
     KAI_ASSERT((nr % kai_nr_multiple_of) == 0);
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
@@ -95,6 +97,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
     size_t sr,  //
     size_t bl,  //
     enum kai_datatype scale_dt) {
+    KAI_ASSERT((k % bl) == 0);
     KAI_ASSERT((bl % kr) == 0);
     KAI_ASSERT((nr % kai_nr_multiple_of) == 0);
     KAI_ASSERT((bl % kai_bl_multiple_of) == 0);
@@ -130,6 +133,7 @@ void kai_run_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
     KAI_ASSERT(params->rhs_zero_point == 8);
     KAI_ASSERT(params->lhs_zero_point == 1);
 
+    KAI_ASSERT((k % bl) == 0);
     KAI_ASSERT((bl % kr) == 0);
     KAI_ASSERT((kr % sr) == 0);
     KAI_ASSERT((nr % kai_nr_multiple_of) == 0);

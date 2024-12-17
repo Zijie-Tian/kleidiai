@@ -60,6 +60,7 @@ size_t kai_get_sr_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8x32_neon_dotprod(vo
 ///
 /// @param[in] m_idx Row index in the LHS matrix (not packed). It must be a multiple of 1
 /// @param[in] k     Total number of columns in the LHS matrix (not packed).
+///                  It must be a multiple of the block length (bl).
 ///
 /// @return the offset in bytes to the packed LHS matrix
 size_t kai_get_lhs_packed_offset_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8x32_neon_dotprod(
@@ -71,6 +72,7 @@ size_t kai_get_lhs_packed_offset_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8x32_
 ///
 /// @param[in] n_idx Row index in the RHS matrix (not packed). It must be a multiple of 8.
 /// @param[in] k     The common dimension between the LHS and RHS matrix (K).
+///                  It must be a multiple of the block length (bl).
 /// @param[in] bl    Block length. It must be a multiple of 32.
 ///
 /// @return the offset in bytes to the packed RHS matrix
@@ -112,6 +114,7 @@ size_t kai_get_dst_size_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8x32_neon_dotp
 /// @param[in]  m              The number of output rows written.
 /// @param[in]  n              The number of output columns written.
 /// @param[in]  k              The number of channels. The common dimension between the LHS and RHS matrix.
+///                            It must be a multiple of the block length (bl).
 /// @param[in]  bl             Block length. It must be a multiple of 32.
 /// @param[in]  lhs_packed     The LHS packed matrix.
 ///                            When the activation are dynamically quantized, you can obtain this matrix
