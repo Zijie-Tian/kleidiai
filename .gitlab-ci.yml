@@ -112,43 +112,46 @@ build-examples:
   stage: build
   extends:
     - .standard-rules
-  parallel:
-    matrix:
-      - EXAMPLE:
-          - matmul_clamp_f16_f16_f16p
-          - matmul_clamp_f32_bf16p_bf16p
-          - matmul_clamp_f32_qai8dxp_qsi4cxp
-          - matmul_clamp_f32_qsi8d32p_qsi4c32p
-          - matmul_clamp_f32_qai8dxp_qsi4c32p
   script:
-    - mkdir -p build/$EXAMPLE
-    - cmake -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -S examples/$EXAMPLE -B build/$EXAMPLE
-    - cmake --build build/$EXAMPLE -j$(nproc)
+    - mkdir -p build
+    - >
+      for EXAMPLE in `ls examples -1`; do
+        if [ -f examples/${EXAMPLE}/CMakeLists.txt ]; then
+          echo "-----------------------------------------------------------"
+          echo "Build examples/${EXAMPLE}"
+          echo "-----------------------------------------------------------"
+          mkdir -p build_${EXAMPLE}
+          cmake -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -S examples/$EXAMPLE -B build_${EXAMPLE}
+          cmake --build build_${EXAMPLE} -j$(nproc)
+          cp build_${EXAMPLE}/${EXAMPLE} build/
+        else
+          echo "No build file found for ${EXAMPLE}"
+          exit 1
+        fi
+      done
   artifacts:
     expire_in: 1 day
     paths:
-      - build/$EXAMPLE/$EXAMPLE
+      - build
 
 test-examples:
   stage: test
   extends:
     - .standard-rules
   needs:
-  - build-examples
-  parallel:
-    matrix:
-      - EXAMPLE:
-          - matmul_clamp_f16_f16_f16p
-          - matmul_clamp_f32_bf16p_bf16p
-          - matmul_clamp_f32_qai8dxp_qsi4cxp
-          - matmul_clamp_f32_qsi8d32p_qsi4c32p
-          - matmul_clamp_f32_qai8dxp_qsi4c32p
+    - build-examples
   script:
-    - build/${EXAMPLE}/${EXAMPLE} | tee -a ${EXAMPLE}.log
+    - >
+      for EXAMPLE in `ls build -1`; do
+          echo "-----------------------------------------------------------"
+          echo "Run ${EXAMPLE}"
+          echo "-----------------------------------------------------------"
+          build/${EXAMPLE} | tee -a example_${EXAMPLE}.log
+      done
   artifacts:
     expire_in: 1 day
     paths:
-      - ${EXAMPLE}.log
+      - "example_*.log"
 
 test-clang-tidy:
   extends:
