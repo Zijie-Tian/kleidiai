@@ -20,18 +20,14 @@ KleidiAI is a library for AI/ML framework developers interested in accelerating 
 
 A micro-kernel, or <strong>ukernel</strong>, can be defined as a near-minimum amount of software to accelerate a given ML operator with high performance.
 
-For example, consider the convolution 2d operator performed through the Winograd algorithm. In this case, the computation requires the following four operations:
+Following are examples of a micro-kernel
 
-- Winograd input transform
-- Winograd filter transform
-- Matrix multiplication
-- Winograd output transform
+- Function to perform [packing](kai/ukernels/matmul/pack/README.md)
+- Function to perform matrix multiplication
 
-Each of the preceding operations is a micro-kernel.
+<em>However, why are the preceding operations not called kernels or functions instead?</em>
 
-<em>However, why the preceding operations are not called kernels or functions instead?</em>
-
-<b>Because the micro-kernels are designed to give the flexibility to process also a portion of the output tensor</b>, which is the reason why we call it micro-kernel.
+<b>This is because the micro-kernels are designed to give the flexibility to process also a portion of the output tensor</b>.
 
 > ℹ️ The API of the micro-kernel is intended to provide the flexibility to dispatch the operation among different working threads or process only a section of the output tensor. Therefore, the caller can control what to process and how.
 
@@ -61,12 +57,11 @@ Some of the key features of KleidiAI are the following:
 
 > ℹ️ The micro-kernel API is designed to be as generic as possible for integration into third-party runtimes.
 
-<h1> Current supported Arm® CPUs technologies and features </h1>
+<h1> Supported instructions and extensions </h1>
 
-<strong>Arm® Neon™</strong>
-
-- <strong>FEAT_DotProd</strong> is optional in Armv8.2-A and mandatory in Armv8.4-A
-- <strong>FEAT_I8MM</strong> is optional in Armv8.2-A and mandatory in Armv8.6-A
+- Advanced SIMD instructions
+- Scalable Matrix Extension(SME)
+- Scalable Matrix Extension 2(SME2)
 
 <h1> Filename convention </h1>
 
@@ -91,106 +86,10 @@ All functions defined in the <strong>.h</strong> header file of the micro-kernel
 
 `kai_<op>_<micro-kernel-variant-filename>.c/.h`
 
-<h1> Data types </h1>
-
-Some of the data types currently supported with the KleidiAI library are the following:
-
-| Data type                                                                                                           | Abbreviation | Notes |
-|---------------------------------------------------------------------------------------------------------------------| ----------- | ----------- |
-| Floating-point 32-bit                                                                                               | <b>f32</b> | |
-| Floating-point 16-bit                                                                                               | <b>f16</b> | |
-| Brain Floating-point 16-bit                                                                                               | <b>bf16</b> | |
-| Quantized (q) Symmetric (s) Signed (i) 4-bit (4) Per-Channel (cx) quantization parameters                           | <b>qsi4cx</b> | An <b>fp32</b> multiplier shared among all values of the same channel. `x` denotes the entirety of the channel |
-| Quantized (q) Asymmetric (a) Signed (i) 8-bit (8) Per-Dimension (dx) (for example, Per-Row) quantization parameters | <b>qai8dx</b> | An <b>fp32</b> multiplier and a <b>int32</b> zero offset shared among all values of the same dimension. |
-
-> ℹ️ In some cases, we may append the letter `p` to the data type to specify that the tensor is expected to be <strong>packed</strong>. A packed tensor is a tensor that has been rearranged in our preferred data layout from the original data layout to improve the performance of the micro-kernel. In addition to the letter `p`, we may append other alphanumerical values to specify the attributes of the data packing (for example, the block packing size or the data type of for the additional packed arguments).
-
 <h1> Supported micro-kernels </h1>
 
-<table class="fixed" style="width:100%">
-<tr>
-    <th style="width:30%">Micro-kernel</th>
-    <th style="width:10%">Abbreviation</th>
-    <th style="width:20%">Data type</th>
-    <th style="width:10%">Reference framework</th>
-    <th style="width:30%">Notes</th>
-</tr>
-<tr>
-    <td>Matrix-multiplication with LHS packed and RHS packed matrices</td>
-    <td style="width:10%">matmul_clamp_f32_qai8dxp_qsi4cxp</td>
-    <td style="width:20%">
-        <b>LHS</b>: qai8dxp <br>
-        <b>RHS</b>: qsi4cxp <br>
-        <b>DST</b>: f32 <br>
-    </td>
-    <td>
-        TensorFlow Lite <br>
-    </td>
-    <td>
-        The packing function for the RHS matrix is available in the `kai_rhs_pack_nxk_qsi4cxp_qsi4cxs1s0.c/.h` files. <br>
-        Since the RHS matrix often contains constant values, we recommend packing the RHS matrix only once and freeing the content of the original RHS matrix. <br>
-    </td>
-</tr>
-<tr>
-    <td>Matrix-multiplication with RHS packed</td>
-    <td style="width:10%">matmul_clamp_f16_f16_f16p</td>
-    <td style="width:20%">
-        <b>LHS</b>: f16 <br>
-        <b>RHS</b>: f16p <br>
-        <b>DST</b>: f16 <br>
-    </td>
-    <td>
-        TensorFlow Lite <br>
-    </td>
-    <td>
-        The packing function for the RHS matrix is available in the `kai_rhs_pack_kxn_f16p16x1biasf16_f16_f16_neon.c/.h` files. <br>
-        Since the RHS matrix often contains constant values, we recommend packing the RHS matrix only once and freeing the content of the original RHS matrix. <br>
-    </td>
-</tr>
-<tr>
-    <td>Matrix-multiplication with RHS packed</td>
-    <td style="width:10%">matmul_clamp_f32_f32_f32p</td>
-    <td style="width:20%">
-        <b>DST</b>: f32 <br>
-        <b>LHS</b>: f32 <br>
-        <b>RHS</b>: f32p <br>
-    </td>
-    <td>
-        TensorFlow Lite <br>
-    </td>
-    <td>
-        The packing function for the RHS matrix is listed in the header file of the GEMM micro kernel. <br>
-    </td>
-</tr>
-<tr>
-    <td>Dynamic quantization and LHS matrix packing</td>
-    <td>kai_lhs_quant_pack_qai8dxp_f32</td>
-    <td>
-        <b>SRC</b>: f32 <br>
-        <b>DST</b>: qai8cx <br>
-    </td>
-    <td>
-        TensorFlow Lite <br>
-    </td>
-    <td>
-        <br>
-    </td>
-</tr>
-<tr>
-    <td>Matrix-multiplication with LHS packed and RHS packed matrices</td>
-    <td style="width:10%">matmul_clamp_f32_bf16p_bf16p</td>
-    <td style="width:20%">
-        <b>LHS</b>: bf16p <br>
-        <b>RHS</b>: bf16p <br>
-        <b>DST</b>: f32 <br>
-    </td>
-    <td>
-    </td>
-    <td>
-        The packing function for the RHS and Lhs matrices is listed in the header file of the GEMM micro kernel.  <br>
-    </td>
-</tr>
-</table>
+For a list of supported micro-kernels refer to the [source](/kai/ukernels/) directory. The micro-kernels are grouped in separate directories based on the performed operation.
+For example, all the matrix-multiplication micro-kernels are held in the `matmul/` directory. In there, the micro kernels are grouped into folders whose name syntax describes the micro kernel from a data type point of view of inputs and outputs.
 
 <h1> How to build </h1>
 
