@@ -24,6 +24,13 @@
 #include <string_view>
 #endif  // defined(__aarch64__) && defined(__APPLE__)
 
+#if defined(__aarch64__) && defined(_WIN64)
+#include <Windows.h>
+#include <processthreadsapi.h>
+#include <sysinfoapi.h>
+#include <winnt.h>
+#endif  // defined(__aarch64__) && defined(_WIN64)
+
 namespace kai::test {
 
 namespace {
@@ -129,6 +136,25 @@ bool get_cap_support(CpuFeatures feature) {
     }
 
     return value == 1;
+}
+#elif defined(__aarch64__) && defined(_WIN64)
+const std::array<std::tuple<CpuFeatures, DWORD, bool>, CpuFeatures::LAST_ELEMENT> cpu_caps{{
+    {CpuFeatures::ADVSIMD, PF_ARM_NEON_INSTRUCTIONS_AVAILABLE, true},
+    {CpuFeatures::DOTPROD, PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE, true},
+    {CpuFeatures::I8MM, 66, true},
+    {CpuFeatures::FP16, 67, true},
+    {CpuFeatures::BF16, 68, true},
+    {CpuFeatures::SVE, PF_ARM_SVE_INSTRUCTIONS_AVAILABLE, true},
+    {CpuFeatures::SVE2, PF_ARM_SVE2_INSTRUCTIONS_AVAILABLE, true},
+    {CpuFeatures::SME, 0, false},
+    {CpuFeatures::SME2, 0, false},
+}};
+
+bool get_cap_support(CpuFeatures feature) {
+    KAI_ASSERT(feature < CpuFeatures::LAST_ELEMENT);
+    auto [cpu_feature, cap_id, api_supported] = cpu_caps[static_cast<int>(feature)];
+
+    return (api_supported) ? IsProcessorFeaturePresent(cap_id) : false;
 }
 #elif defined(__aarch64__)
 #error Please add a way how to check implemented CPU features

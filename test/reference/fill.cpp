@@ -73,17 +73,17 @@ std::vector<uint8_t> fill_matrix_random_raw<BFloat16>(size_t height, size_t widt
 template <>
 std::vector<uint8_t> fill_matrix_random_raw<Int4>(size_t height, size_t width, uint64_t seed) {
     std::mt19937 rnd(seed);
-    std::uniform_int_distribution<int8_t> dist(-8, 7);
+    std::uniform_int_distribution<int16_t> dist(-8, 7);
 
-    return fill_matrix_raw<Int4>(height, width, [&](size_t, size_t) { return Int4(dist(rnd)); });
+    return fill_matrix_raw<Int4>(height, width, [&](size_t, size_t) { return Int4(static_cast<int8_t>(dist(rnd))); });
 }
 
 template <>
 std::vector<uint8_t> fill_matrix_random_raw<UInt4>(size_t height, size_t width, uint64_t seed) {
     std::mt19937 rnd(seed);
-    std::uniform_int_distribution<int8_t> dist(0, 15);
+    std::uniform_int_distribution<int16_t> dist(0, 15);
 
-    return fill_matrix_raw<UInt4>(height, width, [&](size_t, size_t) { return UInt4(dist(rnd)); });
+    return fill_matrix_raw<UInt4>(height, width, [&](size_t, size_t) { return UInt4(static_cast<int8_t>(dist(rnd))); });
 }
 
 }  // namespace
