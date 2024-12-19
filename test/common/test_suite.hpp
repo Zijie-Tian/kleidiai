@@ -13,24 +13,24 @@
 #include <string_view>
 #include <tuple>
 
-#define UKERNEL_MATMUL_VARIANT(name, features_check) \
-    {                                                \
-        {kai_get_m_step_matmul_##name,               \
-         kai_get_n_step_matmul_##name,               \
-         kai_get_mr_matmul_##name,                   \
-         kai_get_nr_matmul_##name,                   \
-         kai_get_kr_matmul_##name,                   \
-         kai_get_sr_matmul_##name,                   \
-         kai_get_lhs_packed_offset_matmul_##name,    \
-         kai_get_rhs_packed_offset_matmul_##name,    \
-         kai_get_dst_offset_matmul_##name,           \
-         kai_get_dst_size_matmul_##name,             \
-         kai_run_matmul_##name},                     \
-            "kai_matmul_" #name, (features_check)    \
-    }
+// clang-format off
+#define UKERNEL_MATMUL_VARIANT(name)          \
+    {kai_get_m_step_matmul_## name,            \
+     kai_get_n_step_matmul_## name,            \
+     kai_get_mr_matmul_## name,                \
+     kai_get_nr_matmul_## name,                \
+     kai_get_kr_matmul_## name,                \
+     kai_get_sr_matmul_## name,                \
+     kai_get_lhs_packed_offset_matmul_## name, \
+     kai_get_rhs_packed_offset_matmul_## name, \
+     kai_get_dst_offset_matmul_## name,        \
+     kai_get_dst_size_matmul_## name,          \
+     kai_run_matmul_## name}
+// clang-format on
+
 #define UKERNEL_MATMUL_PACK_VARIANT(name, features_check, lhs_pack, rhs_pack)                           \
     {                                                                                                   \
-        UKERNEL_MATMUL_VARIANT(name, features_check), {                                                 \
+        {UKERNEL_MATMUL_VARIANT(name), "kai_matmul_" #name, features_check}, {                          \
             kai_get_lhs_packed_size_##lhs_pack, kai_get_rhs_packed_size_##rhs_pack, kai_run_##lhs_pack, \
                 kai_run_##rhs_pack                                                                      \
         }                                                                                               \
