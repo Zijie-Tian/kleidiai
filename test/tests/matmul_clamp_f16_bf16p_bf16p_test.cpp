@@ -240,7 +240,6 @@ std::map<MatMulTestBf16OutFp16::TestDataId, MatMulTestBf16OutFp16::TestData> Mat
 /// Tests the output.
 TEST_P(MatMulTestBf16OutFp16, Output) {
     const auto& [method, info, portion] = GetParam();
-    const auto& data = test_data();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
         GTEST_SKIP();
@@ -249,6 +248,8 @@ TEST_P(MatMulTestBf16OutFp16, Output) {
     if (!method.has_main_kernel()) {
         GTEST_SKIP();
     }
+
+    const auto& data = test_data();
 
     const auto m_step = method.fn_get_main_m_step();
     ASSERT_EQ(m_step, method.m0);
