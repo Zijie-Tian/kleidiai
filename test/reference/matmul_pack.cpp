@@ -34,8 +34,9 @@ std::vector<uint8_t> matmul_pack_rhs_nxk_static_quantized(
 
     // The effective per-channel biases:
     //   final_biases[n_index] = biases[n_index] - lhs_zero_point * sum(data[n_index, :]).
-    const auto row_sum = reduce_add_x<Data, ZeroPoint>(data, n, k);
-    const auto row_sum_times_lhs_zp = mul<ZeroPoint>(row_sum.data(), n, k, &lhs_zero_point, 1, 1);
+    const auto row_sum_reduced = reduce_add_x<Data, ZeroPoint>(data, n, k);
+    // Reduced across width earlier, so lhs width is now 1
+    const auto row_sum_times_lhs_zp = mul<ZeroPoint>(row_sum_reduced.data(), n, 1, &lhs_zero_point, 1, 1);
     auto combined_biases = sub<ZeroPoint>(biases, 1, n, row_sum_times_lhs_zp.data(), 1, n);
     combined_biases.resize(round_up_multiple(n, block_height) * sizeof(ZeroPoint));  // Pads with 0s.
 
