@@ -47,7 +47,7 @@ inline static size_t kai_rhs_packed_stride(size_t k) {
 
     KAI_ASSERT((k_internal % 2) == 0);
 
-    return kai_nr * ((k_internal / 2) + kai_num_bytes_multiplier_rhs + kai_num_bytes_sum_rhs);
+    return kai_nr * ((k_internal / 2) + kai_num_bytes_multiplier_rhs + kai_num_bytes_sum_rhs + kai_num_bytes_bias);
 }
 
 size_t kai_get_m_step_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm(void) {

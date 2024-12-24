@@ -35,6 +35,7 @@
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon.h"
 #include "test/common/cpu_info.hpp"
 #include "test/common/int4.hpp"
+#include "test/common/matrix_portion.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/round.hpp"
 #include "test/common/test_suite.hpp"
@@ -46,16 +47,21 @@
 #include "test/reference/transpose.hpp"
 
 namespace kai::test {
+/// Matrix multiplication test information.
+using MatMulTestParams_with_portion = std::tuple<size_t, MatMulShape, MatrixPortion>;
 
+class UkernelVariantTest_with_portions : public ::testing::TestWithParam<MatMulTestParams_with_portion> {};
 enum class RhsPackType { NxK, KxN };
 
 using ukernel_rhs_pack_function = std::function<decltype(kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0)>;
 using ukernel_get_rhs_packed_size = std::function<decltype(kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0)>;
+using ukernel_get_rhs_packed_offset = std::function<decltype(kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0)>;
 
 template <typename T>
 struct UkernelVariantCustom : public UkernelVariant<T> {
     ukernel_rhs_pack_function run_rhs_pack;
     ukernel_get_rhs_packed_size get_rhs_packed_size;
+    ukernel_get_rhs_packed_offset get_rhs_packed_offset;
     RhsPackType rhs_pack_type;
     bool signed_integer_support;
 
@@ -64,10 +70,12 @@ struct UkernelVariantCustom : public UkernelVariant<T> {
     UkernelVariantCustom(
         T interface, std::string_view name, const std::function<bool(void)>& fn_is_supported,
         ukernel_rhs_pack_function run_rhs_pack, ukernel_get_rhs_packed_size get_rhs_packed_size,
-        const RhsPackType pack_type, const bool signed_integer_support) :
+        ukernel_get_rhs_packed_offset get_rhs_packed_offset, const RhsPackType pack_type,
+        const bool signed_integer_support) :
         UkernelVariant<T>(interface, name, fn_is_supported),
         run_rhs_pack(std::move(run_rhs_pack)),
         get_rhs_packed_size(std::move(get_rhs_packed_size)),
+        get_rhs_packed_offset(std::move(get_rhs_packed_offset)),
         rhs_pack_type(pack_type),
         signed_integer_support(signed_integer_support) {
     }
@@ -78,101 +86,104 @@ static const std::array<UkernelVariantCustom<kai_matmul_clamp_f32_qai8dxp_qsi4cx
         {{UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa),
           "kai_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa__RHS_NxK__", cpu_has_sme2,
           kai_run_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon,
-          kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon, RhsPackType::NxK, false},
+          kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon,
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon, RhsPackType::NxK, false},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x4_qsi4cxp4vlx4_1x4vl_sme2_sdot),
           "kai_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4vlx4_1x4vl_sme2_sdot__RHS_NxK__", cpu_has_sme2,
           kai_run_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon,
-          kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon, RhsPackType::NxK, false},
+          kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon,
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon, RhsPackType::NxK, false},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x4_qsi4cxp4x4_1x4_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4x4_1x4_neon_dotprod__RHS_NxK__", cpu_has_dotprod,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x4_qsi4cxp4x4_1x4_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4x4_1x4_neon_dotprod__RHS_KxN__", cpu_has_dotprod,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod__RHS_NxK__", cpu_has_dotprod,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod__RHS_KxN__", cpu_has_dotprod,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x8_qsi4cxp8x8_1x8x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp8x8_1x8x32_neon_dotprod__RHS_NxK__", cpu_has_dotprod,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp1x8_qsi4cxp8x8_1x8x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp8x8_1x8x32_neon_dotprod__RHS_KxN__", cpu_has_dotprod,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x4_16x4x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x4_16x4x32_neon_dotprod__RHS_NxK__", cpu_has_dotprod,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x4_16x4x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x4_16x4x32_neon_dotprod__RHS_KxN__", cpu_has_dotprod,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x4_qsi4cxp8x4_8x8x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp4x4_qsi4cxp8x4_8x8x32_neon_dotprod__RHS_NxK__", cpu_has_dotprod,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
+
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x4_qsi4cxp8x4_8x8x32_neon_dotprod),
           "kai_matmul_clamp_f32_qai8dxp4x4_qsi4cxp8x4_8x8x32_neon_dotprod__RHS_KxN__", cpu_has_dotprod,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm__RHS_NxK__", cpu_has_i8mm,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm__RHS_KxN__", cpu_has_i8mm,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x8_8x4x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_8x4x32_neon_i8mm__RHS_NxK__", cpu_has_i8mm,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp4x8_8x4x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_8x4x32_neon_i8mm__RHS_KxN__", cpu_has_i8mm,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp8x8_4x8x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp8x8_4x8x32_neon_i8mm__RHS_NxK__", cpu_has_i8mm,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp8x8_4x8x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp8x8_4x8x32_neon_i8mm__RHS_KxN__", cpu_has_i8mm,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true},
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true},
 
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp8x8_8x8x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp8x8_8x8x32_neon_i8mm__RHS_NxK__", cpu_has_i8mm,
           kai_run_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxp_qs4cxs1s0,
-          RhsPackType::NxK, true},
+          kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0, RhsPackType::NxK, true},
          {UKERNEL_MATMUL_VARIANT(clamp_f32_qai8dxp4x8_qsi4cxp8x8_8x8x32_neon_i8mm),
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp8x8_8x8x32_neon_i8mm__RHS_KxN__", cpu_has_i8mm,
           kai_run_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, kai_get_rhs_packed_size_rhs_pack_kxn_qsi4cxp_qs4cxs1s0,
-          RhsPackType::KxN, true}}
+          kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4cxp_qs4cxs1s0, RhsPackType::KxN, true}}
 
 };
 
-class MatMulTest_f32_qai8dxp_qsi4cxp : public UkernelVariantTest {};
+class MatMulTest_f32_qai8dxp_qsi4cxp : public UkernelVariantTest_with_portions {};
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -215,11 +226,32 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
         ref_rhs_scales.data(), nullptr, K, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
+    auto m_step = ukernel_variant.interface.get_m_step();
+    ASSERT_TRUE(m_step % mr == 0);
+
+    auto n_step = ukernel_variant.interface.get_n_step();
+    ASSERT_TRUE(n_step % nr == 0);
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
+    const auto lhs_start_row = rect.start_row();
+    size_t lhs_stride = K * sizeof(float);
+
     // Runs the LHS packing micro-kernel.
     const auto imp_packed_lhs_size = kai_get_lhs_packed_size_lhs_quant_pack_qai8dxp_f32(M, K, mr, kr, sr);
     std::vector<uint8_t> imp_packed_lhs(imp_packed_lhs_size);
+
+    auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    ASSERT_EQ(lhs_packed_offset, ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K));
+
     kai_run_lhs_quant_pack_qai8dxp_f32(
-        M, K, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float), imp_packed_lhs.data());
+        rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
+        reinterpret_cast<const float*>(ref_lhs.data() + lhs_offset), lhs_stride,
+        imp_packed_lhs.data() + lhs_packed_offset);
 
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
@@ -228,6 +260,9 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
         ref_rhs_qsi4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
 
     const auto imp_packed_rhs_size = ukernel_variant.get_rhs_packed_size(N, K, nr, kr, sr);
+    const auto packed_rhs_start_row = rect.start_col();
+    auto rhs_packed_offset = ukernel_variant.get_rhs_packed_offset(packed_rhs_start_row, K, nr, kr, sr);
+    ASSERT_EQ(rhs_packed_offset, ukernel_variant.interface.get_rhs_packed_offset(packed_rhs_start_row, K));
 
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_nxk_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 0};
@@ -235,20 +270,29 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
         1, N, K, nr, kr, sr, ref_rhs_qsi4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
+    const auto dst_stride = N * sizeof(float);
+    const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
+    const auto ref_dst_offset = rect.start_row() * dst_stride + rect.start_col() * sizeof(float);
+    ASSERT_EQ(dst_offset, ref_dst_offset);
+
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        M, N, K, imp_packed_lhs.data(), imp_packed_rhs.data(), reinterpret_cast<float*>(imp_dst.data()),
+        rect.height(), rect.width(), K, imp_packed_lhs.data() + lhs_packed_offset,
+        imp_packed_rhs.data() + rhs_packed_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
         N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
-    // Compares the output of the micro-kernels against the output of the reference implementation.
-    for (size_t y = 0; y < M; ++y) {
-        for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
-            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+    // Compares the output of the micro-kernels against the output of the reference implementation for the portion
+    // tested.
+    for (size_t y = 0; y < rect.height(); ++y) {
+        for (size_t x = 0; x < rect.width(); ++x) {
+            const auto imp_value =
+                read_array<float>(imp_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto ref_value =
+                read_array<float>(ref_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : imp_value;
 
             if (rel_error > 0.0001F) {
                 ASSERT_EQ(imp_value, ref_value);
@@ -256,8 +300,9 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
         }
     }
 }
+
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -297,11 +342,32 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
         ref_rhs_scales.data(), nullptr, K, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
+    auto m_step = ukernel_variant.interface.get_m_step();
+    ASSERT_TRUE(m_step % mr == 0);
+
+    auto n_step = ukernel_variant.interface.get_n_step();
+    ASSERT_TRUE(n_step % nr == 0);
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
+    const auto lhs_start_row = rect.start_row();
+    size_t lhs_stride = K * sizeof(float);
+
     // Runs the LHS packing micro-kernel.
     const auto imp_packed_lhs_size = kai_get_lhs_packed_size_lhs_quant_pack_qai8dxp_f32(M, K, mr, kr, sr);
     std::vector<uint8_t> imp_packed_lhs(imp_packed_lhs_size);
+
+    auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    ASSERT_EQ(lhs_packed_offset, ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K));
+
     kai_run_lhs_quant_pack_qai8dxp_f32(
-        M, K, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float), imp_packed_lhs.data());
+        rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
+        reinterpret_cast<const float*>(ref_lhs.data() + lhs_offset), lhs_stride,
+        imp_packed_lhs.data() + lhs_packed_offset);
 
     const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), N * K);
     // Runs the RHS packing micro-kernel.
@@ -311,6 +377,9 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
         ref_rhs_qsu4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
 
     const auto imp_packed_rhs_size = ukernel_variant.get_rhs_packed_size(N, K, nr, kr, sr);
+    const auto packed_rhs_start_row = rect.start_col();
+    auto rhs_packed_offset = ukernel_variant.get_rhs_packed_offset(packed_rhs_start_row, K, nr, kr, sr);
+    ASSERT_EQ(rhs_packed_offset, ukernel_variant.interface.get_rhs_packed_offset(packed_rhs_start_row, K));
 
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_nxk_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 8};
@@ -318,6 +387,10 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
         1, N, K, nr, kr, sr, ref_rhs_qsu4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
+    const auto dst_stride = N * sizeof(float);
+    const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
+    const auto ref_dst_offset = rect.start_row() * dst_stride + rect.start_col() * sizeof(float);
+    ASSERT_EQ(dst_offset, ref_dst_offset);
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
@@ -341,7 +414,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
 }
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -395,11 +468,31 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
         ref_rhs_scales.data(), nullptr, K, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
+    auto m_step = ukernel_variant.interface.get_m_step();
+    ASSERT_TRUE(m_step % mr == 0);
+
+    auto n_step = ukernel_variant.interface.get_n_step();
+    ASSERT_TRUE(n_step % nr == 0);
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
+    const auto lhs_start_row = rect.start_row();
+    size_t lhs_stride = K * sizeof(float);
+
     // Runs the LHS packing micro-kernel.
     const auto imp_packed_lhs_size = kai_get_lhs_packed_size_lhs_quant_pack_qai8dxp_f32(M, K, mr, kr, sr);
     std::vector<uint8_t> imp_packed_lhs(imp_packed_lhs_size);
+    auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    ASSERT_EQ(lhs_packed_offset, ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K));
+
     kai_run_lhs_quant_pack_qai8dxp_f32(
-        M, K, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float), imp_packed_lhs.data());
+        rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
+        reinterpret_cast<const float*>(ref_lhs.data() + lhs_offset), lhs_stride,
+        imp_packed_lhs.data() + lhs_packed_offset);
 
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
@@ -407,26 +500,39 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
     const auto ref_rhs_qsi4_padded = pad_row<Int4>(
         ref_rhs_qsi4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const auto imp_packed_rhs_size = ukernel_variant.get_rhs_packed_size(N, K, nr, kr, sr);
+    const auto packed_rhs_start_row = rect.start_col();
+    auto rhs_packed_offset = ukernel_variant.get_rhs_packed_offset(packed_rhs_start_row, K, nr, kr, sr);
+    ASSERT_EQ(rhs_packed_offset, ukernel_variant.interface.get_rhs_packed_offset(packed_rhs_start_row, K));
+
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 0};
     ukernel_variant.run_rhs_pack(
         1, N, K, nr, kr, sr, ref_rhs_qsi4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
+    const auto dst_stride = N * sizeof(float);
+    const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
+    const auto ref_dst_offset = rect.start_row() * dst_stride + rect.start_col() * sizeof(float);
+    ASSERT_EQ(dst_offset, ref_dst_offset);
+
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        M, N, K, imp_packed_lhs.data(), imp_packed_rhs.data(), reinterpret_cast<float*>(imp_dst.data()),
+        rect.height(), rect.width(), K, imp_packed_lhs.data() + lhs_packed_offset,
+        imp_packed_rhs.data() + rhs_packed_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
         N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
-    // Compares the output of the micro-kernels against the output of the reference implementation.
-    for (size_t y = 0; y < M; ++y) {
-        for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
-            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+    // Compares the output of the micro-kernels against the output of the reference implementation for the portion
+    // tested.
+    for (size_t y = 0; y < rect.height(); ++y) {
+        for (size_t x = 0; x < rect.width(); ++x) {
+            const auto imp_value =
+                read_array<float>(imp_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto ref_value =
+                read_array<float>(ref_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : imp_value;
 
             if (rel_error > 0.0001F) {
                 ASSERT_EQ(imp_value, ref_value);
@@ -436,7 +542,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
 }
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
@@ -488,11 +594,32 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
         ref_rhs_scales.data(), nullptr, K, ref_biases.data(), std::numeric_limits<float>::lowest(),
         std::numeric_limits<float>::max());
 
+    auto m_step = ukernel_variant.interface.get_m_step();
+    ASSERT_TRUE(m_step % mr == 0);
+
+    auto n_step = ukernel_variant.interface.get_n_step();
+    ASSERT_TRUE(n_step % nr == 0);
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
+    const auto lhs_start_row = rect.start_row();
+    size_t lhs_stride = K * sizeof(float);
+
     // Runs the LHS packing micro-kernel.
     const auto imp_packed_lhs_size = kai_get_lhs_packed_size_lhs_quant_pack_qai8dxp_f32(M, K, mr, kr, sr);
     std::vector<uint8_t> imp_packed_lhs(imp_packed_lhs_size);
+
+    auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    ASSERT_EQ(lhs_packed_offset, ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K));
+
     kai_run_lhs_quant_pack_qai8dxp_f32(
-        M, K, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float), imp_packed_lhs.data());
+        rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
+        reinterpret_cast<const float*>(ref_lhs.data() + lhs_offset), lhs_stride,
+        imp_packed_lhs.data() + lhs_packed_offset);
 
     // Runs the RHS packing micro-kernel.
     //   * Generates the 4-bit unsigned symmetric quantized input for the micro-kernel.
@@ -501,26 +628,39 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
     const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
         ref_rhs_qsu4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const auto imp_packed_rhs_size = ukernel_variant.get_rhs_packed_size(N, K, nr, kr, sr);
+    const auto packed_rhs_start_row = rect.start_col();
+    auto rhs_packed_offset =
+        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4cxp_qs4cxs1s0(packed_rhs_start_row, K, nr, kr, sr);
+    ASSERT_EQ(rhs_packed_offset, ukernel_variant.interface.get_rhs_packed_offset(packed_rhs_start_row, K));
+
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
     const kai_rhs_pack_kxn_qsi4cxp_qs4cxs1s0_params params{.lhs_zero_point = 1, .rhs_zero_point = 8};
     ukernel_variant.run_rhs_pack(
         1, N, K, nr, kr, sr, ref_rhs_qsu4_padded.data(), reinterpret_cast<const float*>(ref_biases.data()),
         reinterpret_cast<const float*>(ref_rhs_scales.data()), imp_packed_rhs.data(), 0, &params);
 
+    const auto dst_stride = N * sizeof(float);
+    const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
+    const auto ref_dst_offset = rect.start_row() * dst_stride + rect.start_col() * sizeof(float);
+    ASSERT_EQ(dst_offset, ref_dst_offset);
+
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(M, N);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        M, N, K, imp_packed_lhs.data(), imp_packed_rhs.data(), reinterpret_cast<float*>(imp_dst.data()),
+        rect.height(), rect.width(), K, imp_packed_lhs.data() + lhs_packed_offset,
+        imp_packed_rhs.data() + rhs_packed_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
         N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
     // Compares the output of the micro-kernels against the output of the reference implementation.
-    for (size_t y = 0; y < M; ++y) {
-        for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
-            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+    for (size_t y = 0; y < rect.height(); ++y) {
+        for (size_t x = 0; x < rect.width(); ++x) {
+            const auto imp_value =
+                read_array<float>(imp_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto ref_value =
+                read_array<float>(ref_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : imp_value;
 
             if (rel_error > 0.0001F) {
                 ASSERT_EQ(imp_value, ref_value);
@@ -539,14 +679,25 @@ INSTANTIATE_TEST_SUITE_P(
             MatMulShape{15, 35, 65},  //
             MatMulShape{8, 32, 64},   //
             MatMulShape{15, 31, 45},  //
-            MatMulShape{1, 35, 65})),
+            MatMulShape{1, 35, 65}),
+        testing::Values(
+            MatrixPortion(0, 0, 1, 1),     // Full matrix.
+            MatrixPortion(0, 0, 1, 0.25),  // Leftmost portion.
+            MatrixPortion(0, 0.75, 1, 1),  // Rightmost portion.
+            MatrixPortion(0, 0.5, 1, 0.8)  // Somewhere Middle
+            )),
     [](const auto& info) {
         const auto variant_idx = std::get<0>(info.param);
         const std::string name{variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_idx).name};
         const auto shape = std::get<MatMulShape>(info.param);
+        const auto portion = std::get<2>(info.param);
 
         std::stringstream sstream;
-        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k << "__PortionStartRow_"
+                << static_cast<int>(portion.start_row() * 1000)                          //
+                << "__PortionStartCol_" << static_cast<int>(portion.start_col() * 1000)  //
+                << "__PortionHeight_" << static_cast<int>(portion.height() * 1000)       //
+                << "__PortionWidth_" << static_cast<int>(portion.width() * 1000);
         return sstream.str();
     });
 
