@@ -11,8 +11,15 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 ## Upcoming Release
 
 - New SME micro-kernels:
+
   - Matrix multiplication (MxN and 1xN) of QAI8DX LHS and QSI4CX RHS to produce F32 output
+
 - Packing micro-kernels for QSI4CX RHS, to work with the SME matrix multiplication (MxN and 1xN) micro-kernels.
+
+- New Advanced SIMD micro-kernel variant:
+
+  - Matrix multiplication (MxN) of QAI8DXP LHS (dynamic 8-bit integer per-row quantized) and QSI4C32 RHS (4-bit integer per-block quantized) to produce F32 output of 16x4 block size.
+    - Optimizations for FEAT_DotProd.
 
 ## v1.0.0
 
