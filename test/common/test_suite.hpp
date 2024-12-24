@@ -12,6 +12,7 @@
 #include <functional>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 // clang-format off
 #define UKERNEL_MATMUL_VARIANT(name)          \
@@ -50,6 +51,10 @@ struct UkernelVariant {
     ///
     /// @return Supported (true) or not supported (false).
     std::function<bool(void)> fn_is_supported;
+
+    UkernelVariant(T interface, const std::string_view name, const std::function<bool(void)>& fn_is_supported) :
+        interface(interface), name(name), fn_is_supported(fn_is_supported) {
+    }
 };
 
 template <typename T, typename P>
