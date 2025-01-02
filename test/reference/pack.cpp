@@ -26,14 +26,14 @@ namespace kai::test {
 
 namespace {
 
-uint16_t convert(const uint8_t* src_ptr_elm, DataType src_dtype, DataType dst_dtype) {
+BFloat16 convert(const uint8_t* src_ptr_elm, DataType src_dtype, DataType dst_dtype) {
     KAI_ASSUME((src_dtype == DataType::FP32 || src_dtype == DataType::FP16) && dst_dtype == DataType::BF16);
 
     switch (src_dtype) {
         case DataType::FP32:
-            return BFloat16(*reinterpret_cast<const float*>(src_ptr_elm)).data();
+            return BFloat16(*reinterpret_cast<const float*>(src_ptr_elm));
         case DataType::FP16:
-            return BFloat16(static_cast<float>(*reinterpret_cast<const float16_t*>(src_ptr_elm))).data();
+            return BFloat16(static_cast<float>(*reinterpret_cast<const float16_t*>(src_ptr_elm)));
         default:
             KAI_ERROR("Unsupported Data Type");
     }
@@ -77,7 +77,7 @@ std::vector<uint8_t> pack_block(
                                              x_element) *
                                                 src_esize;
 
-                                        const uint16_t src_value = convert(src_ptr_elm, src_dtype, dst_dtype);
+                                        const BFloat16 src_value = convert(src_ptr_elm, src_dtype, dst_dtype);
                                         memcpy(dst_ptr, &src_value, dst_esize);
                                     }
                                 }
@@ -149,7 +149,7 @@ std::vector<uint8_t> pack_bias_per_row(
                                              x_element) *
                                                 src_esize;
 
-                                        const uint16_t dst_value = convert(src_ptr_elm, src_dtype, dst_dtype);
+                                        const BFloat16 dst_value = convert(src_ptr_elm, src_dtype, dst_dtype);
                                         memcpy(dst_ptr, &dst_value, dst_esize);
                                     }
                                 }

@@ -226,6 +226,8 @@ if(KLEIDIAI_BUILD_TESTS)
     if(MSVC)
         add_library(kleidiai_test_framework
             test/common/data_type.cpp
+            test/common/bfloat16.cpp
+            test/common/bfloat16_asm.S
             test/common/float16.cpp
             test/common/float16.S
             test/common/cpu_info.cpp
@@ -242,6 +244,7 @@ if(KLEIDIAI_BUILD_TESTS)
             test/common/rect.cpp
             test/common/round.cpp
             test/common/bfloat16.cpp
+            test/common/bfloat16_asm.S
             test/common/float16.cpp
             test/common/float16.S
             test/common/cpu_info.cpp
@@ -268,6 +271,7 @@ if(KLEIDIAI_BUILD_TESTS)
     )
 
     if(MSVC)
+        set_source_files_properties(test/common/bfloat16_asm.S PROPERTIES LANGUAGE ASM_MARMASM)
         set_source_files_properties(test/common/float16.S PROPERTIES LANGUAGE ASM_MARMASM)
     endif()
 
@@ -279,10 +283,12 @@ if(KLEIDIAI_BUILD_TESTS)
 
     if(MSVC)
         add_executable(kleidiai_test
+            test/tests/bfloat16_test.cpp
             test/tests/float16_test.cpp
         )
     else()
         add_executable(kleidiai_test
+            test/tests/bfloat16_test.cpp
             test/tests/float16_test.cpp
             test/tests/matmul_test.cpp
             test/tests/matmul_clamp_f32_f32_f32p_test.cpp
