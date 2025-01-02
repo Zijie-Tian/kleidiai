@@ -83,7 +83,7 @@ void kai_run_lhs_pack_x8p2vlx4_x8_sme(
 
     for (size_t block_y = 0; block_y < m; block_y += block_height) {
         const size_t height = KAI_MIN(m - block_y, block_height);
-        void* out = lhs_packed_ptr + block_y * kai_roundup(k, kai_kr) * sizeof(int8_t);
+        void* out = (void*)((char*)lhs_packed_ptr + block_y * kai_roundup(k, kai_kr) * sizeof(int8_t));
 
         for (size_t y = 0; y < height; y++) {
             in[y] = lhs_ptr + (block_y + y) * lhs_stride;

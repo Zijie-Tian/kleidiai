@@ -77,7 +77,7 @@ void kai_run_lhs_pack_f32p2vlx1_f32_sme(
     const uint8_t* lhs_ptr = lhs;
     for (size_t block_y = 0; block_y < m; block_y += block_height) {
         const size_t height = KAI_MIN(m - block_y, block_height);
-        void* out = lhs_packed_ptr + block_y * k * sizeof(float);
+        void* out = (void*)((char*)lhs_packed_ptr + block_y * k * sizeof(float));
 
         for (size_t y = 0; y < height; y++) {
             in[y] = lhs_ptr + (block_y + y) * lhs_stride;

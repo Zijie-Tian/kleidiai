@@ -135,7 +135,7 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
 
         const size_t dst_x = ((row_idx + m_idx_start) % mr);
 
-        uint8_t* dst_ptr = (uint8_t*)lhs_packed + dst_x * k_block_len * sizeof(int8_t);
+        uint8_t* dst_ptr = (uint8_t*)lhs_packed + (dst_x * k_block_len * sizeof(int8_t));
 
         // Quantize the channels
         int32_t block_idx = 0;
