@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -77,6 +77,10 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, Offset_RHS) {
     const auto& [variant_index, matmul_shape, bl, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4c32p.at(variant_index);
 
+    if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
+        GTEST_SKIP();
+    }
+
     const size_t K = matmul_shape.k;
     const auto nr = ukernel_variant.interface.get_nr();
     const auto kr = ukernel_variant.interface.get_kr();
@@ -103,6 +107,10 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, Offset_RHS) {
 TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, Offset_LHS) {
     const auto& [variant_index, matmul_shape, bl, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4c32p.at(variant_index);
+
+    if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
+        GTEST_SKIP();
+    }
 
     const size_t K = matmul_shape.k;
 
