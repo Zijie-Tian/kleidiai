@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -98,9 +98,11 @@ I8MM_KERNELS = [
 
 # buildifier: keep sorted
 SME_KERNELS = [
+    "pack/kai_lhs_pack_bf16p2vlx2_f32_sme",
     "pack/kai_lhs_pack_f32p2vlx1_f32_sme",
     "pack/kai_lhs_pack_x16p2vlx2_x16_sme",
     "pack/kai_lhs_pack_x8p2vlx4_x8_sme",
+    "pack/kai_rhs_pack_kxn_bf16p2vlx2b_f32_x32_sme",
     "pack/kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme",
     "pack/kai_rhs_pack_kxn_f32p2vlx1biasf32_f32_f32_sme",
     "pack/kai_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme",
@@ -120,6 +122,7 @@ SME2_KERNELS = [
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4vlx4_1x4vl_sme2_sdot",
     "matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p1vlx4_qsi4c32p4vlx4_1vlx4vl_sme2_mopa",
     "matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p1x4_qsi4c32p4vlx4_1x4vl_sme2_sdot",
+    "matmul_clamp_fp32_bf16p_bf16p/kai_matmul_clamp_f32_bf16p2vlx2_bf16p2vlx2_2vlx2vl_sme2_mopa",
     "matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa",
 ]
 
