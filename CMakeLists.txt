@@ -226,47 +226,37 @@ if(KLEIDIAI_BUILD_TESTS)
     enable_testing()
     include(GoogleTest)
 
-    if(MSVC)
-        add_library(kleidiai_test_framework
-            test/common/data_type.cpp
-            test/common/bfloat16.cpp
-            test/common/bfloat16_asm.S
-            test/common/float16.cpp
-            test/common/float16.S
-            test/common/cpu_info.cpp
-        )
-    else()
-        add_library(kleidiai_test_framework
-            test/common/data_type.cpp
-            test/common/data_format.cpp
-            test/common/printer.cpp
-            test/common/int4.cpp
-            test/common/compare.cpp
-            test/common/matmul_test_common.cpp
-            test/common/matrix_portion.cpp
-            test/common/rect.cpp
-            test/common/round.cpp
-            test/common/bfloat16.cpp
-            test/common/bfloat16_asm.S
-            test/common/float16.cpp
-            test/common/float16.S
-            test/common/cpu_info.cpp
-            test/common/sme.cpp
+    add_library(kleidiai_test_framework
+        test/common/data_type.cpp
+        test/common/data_format.cpp
+        test/common/printer.cpp
+        test/common/int4.cpp
+        test/common/compare.cpp
+        test/common/matmul_test_common.cpp
+        test/common/matrix_portion.cpp
+        test/common/rect.cpp
+        test/common/round.cpp
+        test/common/round_asm.S
+        test/common/bfloat16.cpp
+        test/common/bfloat16_asm.S
+        test/common/float16.cpp
+        test/common/float16_asm.S
+        test/common/cpu_info.cpp
+        $<$<NOT:$<BOOL:${MSVC}>>:test/common/sme.cpp>
 
-            test/reference/binary_elementwise.cpp
-            test/reference/matmul.cpp
-            test/reference/matmul_pack.cpp
-            test/reference/fill.cpp
-            test/reference/pack.cpp
-            test/reference/pad.cpp
-            test/reference/clamp.cpp
-            test/reference/quantize.cpp
-            test/reference/reduce.cpp
-            test/reference/transpose.cpp
-            test/reference/cast.cpp
-            test/reference/reorder.cpp
-        )
-    endif()
+        test/reference/binary_elementwise.cpp
+        test/reference/matmul.cpp
+        test/reference/matmul_pack.cpp
+        test/reference/fill.cpp
+        test/reference/pack.cpp
+        test/reference/pad.cpp
+        test/reference/clamp.cpp
+        test/reference/quantize.cpp
+        test/reference/reduce.cpp
+        test/reference/transpose.cpp
+        test/reference/cast.cpp
+        test/reference/reorder.cpp
+    )
 
     target_compile_options(kleidiai_test_framework
         PUBLIC ${KLEIDIAI_WARNING_FLAGS}
@@ -275,7 +265,8 @@ if(KLEIDIAI_BUILD_TESTS)
 
     if(MSVC)
         set_source_files_properties(test/common/bfloat16_asm.S PROPERTIES LANGUAGE ASM_MARMASM)
-        set_source_files_properties(test/common/float16.S PROPERTIES LANGUAGE ASM_MARMASM)
+        set_source_files_properties(test/common/float16_asm.S PROPERTIES LANGUAGE ASM_MARMASM)
+        set_source_files_properties(test/common/round_asm.S PROPERTIES LANGUAGE ASM_MARMASM)
     endif()
 
     set_source_files_properties(test/common/sme.cpp PROPERTIES COMPILE_OPTIONS "-fno-tree-vectorize;-march=armv8.2-a+sve${KLEIDIAI_INTERNAL_EXTRA_ARCH}")

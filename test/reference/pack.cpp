@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -33,7 +33,7 @@ BFloat16 convert(const uint8_t* src_ptr_elm, DataType src_dtype, DataType dst_dt
         case DataType::FP32:
             return BFloat16(*reinterpret_cast<const float*>(src_ptr_elm));
         case DataType::FP16:
-            return BFloat16(static_cast<float>(*reinterpret_cast<const float16_t*>(src_ptr_elm)));
+            return BFloat16(static_cast<float>(*reinterpret_cast<const Float16*>(src_ptr_elm)));
         default:
             KAI_ERROR("Unsupported Data Type");
     }

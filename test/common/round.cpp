@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -9,20 +9,35 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "kai/kai_common.h"
+
+extern "C" {
+
+/// Rounds the specified value to nearest with tie to even.
+///
+/// @param[in] value The value to be rounded.
+///
+/// @return The rounded value.
+int32_t kai_test_round_to_nearest_even_i32_f32(float value);
+
+/// Rounds the specified value to nearest with tie to even.
+///
+/// @param[in] value The value to be rounded.
+///
+/// @return The rounded value.
+int64_t kai_test_round_to_nearest_even_i64_f32(float value);
+}
+
 namespace kai::test {
 
 int32_t round_to_nearest_even_i32(float value) {
-    int32_t rounded = 0;
-    __asm__ __volatile__("fcvtns %w[output], %s[input]" : [output] "=r"(rounded) : [input] "w"(value));
-    return rounded;
+    return kai_test_round_to_nearest_even_i32_f32(value);
 }
 
 size_t round_to_nearest_even_usize(float value) {
     static_assert(sizeof(size_t) == sizeof(uint64_t));
-
-    uint64_t rounded = 0;
-    __asm__ __volatile__("fcvtns %x[output], %s[input]" : [output] "=r"(rounded) : [input] "w"(value));
-    return rounded;
+    KAI_ASSUME(value >= 0);
+    return static_cast<size_t>(kai_test_round_to_nearest_even_i64_f32(value));
 }
 
 template <>
