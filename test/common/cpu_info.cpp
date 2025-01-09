@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -24,12 +24,12 @@
 #include <string_view>
 #endif  // defined(__aarch64__) && defined(__APPLE__)
 
-#if defined(__aarch64__) && defined(_WIN64)
+#if (defined(__aarch64__) && defined(_WIN64)) || defined(_M_ARM64)
 #include <Windows.h>
 #include <processthreadsapi.h>
 #include <sysinfoapi.h>
 #include <winnt.h>
-#endif  // defined(__aarch64__) && defined(_WIN64)
+#endif  // (defined(__aarch64__) && defined(_WIN64)) || defined(_M_ARM64)
 
 namespace kai::test {
 
@@ -137,7 +137,7 @@ bool get_cap_support(CpuFeatures feature) {
 
     return value == 1;
 }
-#elif defined(__aarch64__) && defined(_WIN64)
+#elif (defined(__aarch64__) && defined(_WIN64)) || defined(_M_ARM64)
 const std::array<std::tuple<CpuFeatures, DWORD, bool>, CpuFeatures::LAST_ELEMENT> cpu_caps{{
     {CpuFeatures::ADVSIMD, PF_ARM_NEON_INSTRUCTIONS_AVAILABLE, true},
     {CpuFeatures::DOTPROD, PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE, true},
