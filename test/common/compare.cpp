@@ -145,9 +145,9 @@ bool compare_per_row(
                     for (size_t y = 0; y < subblock_height; ++y) {
                         for (size_t x = 0; x < subblock_width; ++x) {
                             const auto offset = (y_subblock + y) * full_width + x_block + x_subblock + x;
-                            const auto imp_data = read_array<Data>(imp_ptr, offset);
-                            const Data ref_data = in_roi ? read_array<Data>(ref_ptr, offset) : static_cast<Data>(0);
-                            const auto [abs_err, rel_err] = calculate_error(imp_data, ref_data);
+                            const auto imp_value = read_array<Data>(imp_ptr, offset);
+                            const Data ref_value = in_roi ? read_array<Data>(ref_ptr, offset) : static_cast<Data>(0);
+                            const auto [abs_err, rel_err] = calculate_error(imp_value, ref_value);
 
                             if (abs_err != 0 || rel_err != 0) {
                                 const auto notifying = !in_roi || handler.handle_data(abs_err, rel_err);
@@ -155,8 +155,8 @@ bool compare_per_row(
                                 if (notifying) {
                                     const auto raw_index = y_block * block_height * block_width + offset;
                                     KAI_LOGE(
-                                        "Mismatched data ", raw_index, ": actual = ", imp_data,
-                                        ", expected: ", ref_data);
+                                        "Mismatched data ", raw_index, ": actual = ", imp_value,
+                                        ", expected: ", ref_value);
                                 }
                             }
                         }
