@@ -10,6 +10,12 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- New SME micro-kernels:
+  - Matrix multiplication (MxN) for BF16 inputs with F32 output.
+- Add MSVC support for test framework
+- Fixes:
+  - Fix several CPU feature check issues affecting test framework
+
 ## v1.1.0
 
 - New Advanced SIMD micro-kernels:
