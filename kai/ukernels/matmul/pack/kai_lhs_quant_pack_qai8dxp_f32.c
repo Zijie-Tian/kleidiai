@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -163,6 +163,8 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
                 int16_t nzp_s16 = (int16_t)nudged_zero_point0;
                 int16x8_t vnzp_s16 = vdupq_n_s16(nzp_s16);
                 v_s16 = vaddq_s16(v_s16, vnzp_s16);
+                v_s16 = vmaxq_s16(v_s16, vdupq_n_s16(INT8_MIN));
+                v_s16 = vminq_s16(v_s16, vdupq_n_s16(INT8_MAX));
 
                 int8x8_t v0_s8 = vqmovn_s16(v_s16);
                 vst1_s8((int8_t*)(dst_ptr), v0_s8);
@@ -182,6 +184,9 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
                     int32_t v0_s32 = (int32_t)(roundf(src0_0 * scale0));
 
                     v0_s32 = v0_s32 + nudged_zero_point0;
+                    v0_s32 = KAI_MAX(v0_s32, INT8_MIN);
+                    v0_s32 = KAI_MIN(v0_s32, INT8_MAX);
+
                     *((int8_t*)(dst_ptr)) = (int8_t)v0_s32;
                     dst_ptr += sizeof(int8_t);
                 }
@@ -201,6 +206,9 @@ void kai_run_lhs_quant_pack_qai8dxp_f32(
                 int32_t v0_s32 = (int32_t)(roundf(src0_0 * scale0));
 
                 v0_s32 = v0_s32 + nudged_zero_point0;
+                v0_s32 = KAI_MAX(v0_s32, INT8_MIN);
+                v0_s32 = KAI_MIN(v0_s32, INT8_MAX);
+
                 *((int8_t*)(dst_ptr)) = (int8_t)v0_s32;
                 dst_ptr += sizeof(int8_t);
             }
