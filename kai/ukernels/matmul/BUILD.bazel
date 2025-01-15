@@ -40,6 +40,10 @@ NEON_KERNELS = [
     "pack/kai_rhs_pack_nxk_qsi8cxp_qsi8cx_neon",
 ]
 
+NEON_KERNELS_ASM = [
+    "matmul_clamp_f32_f32_f32p/kai_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla",
+]
+
 # buildifier: keep sorted
 FP16_KERNELS = [
     "matmul_clamp_f16_f16_f16p/kai_matmul_clamp_f16_f16_f16p16x1biasf16_6x16x8_neon_mla",
@@ -146,6 +150,12 @@ kai_c_library(
 )
 
 kai_c_library(
+    name = "neon_impl_asm",
+    srcs = [ukernel + "_asm.S" for ukernel in NEON_KERNELS_ASM],
+    cpu_uarch = kai_cpu_neon(),
+)
+
+kai_c_library(
     name = "fp16_impl",
     srcs = [ukernel + ".c" for ukernel in FP16_KERNELS],
     cpu_uarch = kai_cpu_fp16(),
@@ -205,6 +215,7 @@ kai_c_library(
         ":i8mm_impl",
         ":interface",
         ":neon_impl",
+        ":neon_impl_asm",
         ":scalar_impl",
         ":sme2_impl",
         ":sme_impl",
