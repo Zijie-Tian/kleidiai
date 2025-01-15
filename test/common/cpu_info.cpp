@@ -138,23 +138,59 @@ bool get_cap_support(CpuFeatures feature) {
     return value == 1;
 }
 #elif (defined(__aarch64__) && defined(_WIN64)) || defined(_M_ARM64)
-const std::array<std::tuple<CpuFeatures, DWORD, bool>, CpuFeatures::LAST_ELEMENT> cpu_caps{{
-    {CpuFeatures::ADVSIMD, PF_ARM_NEON_INSTRUCTIONS_AVAILABLE, true},
-    {CpuFeatures::DOTPROD, PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE, true},
-    {CpuFeatures::I8MM, 66, true},
-    {CpuFeatures::FP16, 67, true},
-    {CpuFeatures::BF16, 68, true},
-    {CpuFeatures::SVE, PF_ARM_SVE_INSTRUCTIONS_AVAILABLE, true},
-    {CpuFeatures::SVE2, PF_ARM_SVE2_INSTRUCTIONS_AVAILABLE, true},
-    {CpuFeatures::SME, 0, false},
-    {CpuFeatures::SME2, 0, false},
+// Some system registers are provided in HARDWARE\DESCRIPTION\System\CentralProcessor\* registry.
+//
+// The registry name is encoded as
+//   CP {op0 & 1, op1, CRn, CRm, op2}
+//
+// These can be used to detect architectural features that are unable to detect reliably
+// using IsProcessorFeaturePresent. It must not be used to detect architectural features
+// that require operating system support such as SVE and SME.
+const char* ID_AA64PFR0_EL1 = "CP 4020";
+const char* ID_AA64ISAR1_EL1 = "CP 4031";
+
+const std::array<std::tuple<CpuFeatures, DWORD, const char*, uint64_t>, CpuFeatures::LAST_ELEMENT> cpu_caps{{
+    {CpuFeatures::ADVSIMD, PF_ARM_NEON_INSTRUCTIONS_AVAILABLE, nullptr, 0},
+    {CpuFeatures::DOTPROD, PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE, nullptr, 0},
+    {CpuFeatures::I8MM, 0, ID_AA64ISAR1_EL1, 0x00f0000000000000ULL},
+    {CpuFeatures::FP16, 0, ID_AA64PFR0_EL1, 0x00000000000f0000ULL},
+    {CpuFeatures::BF16, 0, ID_AA64ISAR1_EL1, 0x0000f00000000000ULL},
+    {CpuFeatures::SVE, 46, nullptr, 0},
+    {CpuFeatures::SVE2, 47, nullptr, 0},
+    {CpuFeatures::SME, 0, nullptr, 0},
+    {CpuFeatures::SME2, 0, nullptr, 0},
 }};
+
+uint64_t read_sysreg(const char* name) {
+    uint64_t value = 0;
+    DWORD size = sizeof(value);
+
+    const LSTATUS status = RegGetValueA(
+        HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", name, RRF_RT_REG_QWORD, nullptr,
+        &value, &size);
+
+    KAI_ASSERT(status == ERROR_SUCCESS);
+
+    return value;
+}
 
 bool get_cap_support(CpuFeatures feature) {
     KAI_ASSERT(feature < CpuFeatures::LAST_ELEMENT);
-    auto [cpu_feature, cap_id, api_supported] = cpu_caps[static_cast<int>(feature)];
+    auto [cpu_feature, cap_id, reg_name, reg_mask] = cpu_caps[static_cast<int>(feature)];
 
-    return (api_supported) ? IsProcessorFeaturePresent(cap_id) : false;
+    if (cap_id != 0) {
+        return IsProcessorFeaturePresent(cap_id);
+    }
+
+    if (reg_name != nullptr) {
+        const uint64_t value = read_sysreg(reg_name);
+        const bool is_aarch64 = IsProcessorFeaturePresent(PF_ARM_V8_INSTRUCTIONS_AVAILABLE);
+        const bool has_feature = (value & reg_mask) != 0;
+
+        return is_aarch64 && has_feature;
+    }
+
+    return false;
 }
 #elif defined(__aarch64__)
 #error Please add a way how to check implemented CPU features
