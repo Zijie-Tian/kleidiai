@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -58,7 +58,7 @@ extern "C" {
 ///
 /// @return Project version as a string literal.
 inline const char* kai_get_version(void) {
-    return "1.1.0";
+    return "1.2.0";
 }
 
 /// KleidiAI data types

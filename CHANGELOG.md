@@ -1,5 +1,5 @@
 <!--
-    SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+    SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 
     SPDX-License-Identifier: Apache-2.0
 -->
@@ -9,6 +9,8 @@
 KleidiAI follows the [Semantic Versioning](https://semver.org/) specification for releases.
 
 ## Upcoming Release
+
+## v1.2.0
 
 - New SME micro-kernels:
   - Matrix multiplication (MxN) for BF16 inputs with F32 output.
