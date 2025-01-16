@@ -15,6 +15,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 - Add MSVC support for test framework
 - Fixes:
   - Fix several CPU feature check issues affecting test framework
+  - Fix the LHS/RHS packed offset calculation in matmul get_offset methods
 
 ## v1.1.0
 

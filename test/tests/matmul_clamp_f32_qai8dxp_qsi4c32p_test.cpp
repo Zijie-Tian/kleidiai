@@ -81,26 +81,32 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, Offset_RHS) {
         GTEST_SKIP();
     }
 
+    const size_t M = matmul_shape.m;
+    const size_t N = matmul_shape.n;
     const size_t K = matmul_shape.k;
+
+    auto m_step = ukernel_variant.interface.get_m_step();
+    auto n_step = ukernel_variant.interface.get_n_step();
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
     const auto nr = ukernel_variant.interface.get_nr();
     const auto kr = ukernel_variant.interface.get_kr();
     const auto sr = ukernel_variant.interface.get_sr();
     kai_datatype scale_dt = kai_datatype::kai_dt_bf16;
 
-    auto n_step = ukernel_variant.interface.get_n_step();
-    auto a_tmp = ukernel_variant.interface.get_rhs_packed_offset(n_step, K, bl) / n_step;
-    auto b_tmp = ukernel_variant.interface.get_rhs_packed_offset(n_step * 16, K, bl) / (n_step * 16);
-
-    ASSERT_EQ(a_tmp, b_tmp);
-
+    const auto rhs_start_row = rect.start_col();
     auto rhs_packed_offset_kxn =
-        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(n_step, K, nr, kr, sr, bl, scale_dt);
+        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(rhs_start_row, K, nr, kr, sr, bl, scale_dt);
     auto rhs_packed_offset_nxk =
-        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(n_step, K, nr, kr, sr, bl, scale_dt);
+        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(rhs_start_row, K, nr, kr, sr, bl, scale_dt);
 
     ASSERT_EQ(rhs_packed_offset_kxn, rhs_packed_offset_nxk);
 
-    auto rhs_matmul_offset = ukernel_variant.interface.get_rhs_packed_offset(n_step, K, bl);
+    auto rhs_matmul_offset = ukernel_variant.interface.get_rhs_packed_offset(rhs_start_row, K, bl);
     ASSERT_EQ(rhs_packed_offset_kxn, rhs_matmul_offset);
 }
 
@@ -112,13 +118,27 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, Offset_LHS) {
         GTEST_SKIP();
     }
 
+    const size_t M = matmul_shape.m;
+    const size_t N = matmul_shape.n;
     const size_t K = matmul_shape.k;
 
     auto m_step = ukernel_variant.interface.get_m_step();
-    auto a_tmp = ukernel_variant.interface.get_lhs_packed_offset(m_step, K) / m_step;
-    auto b_tmp = ukernel_variant.interface.get_lhs_packed_offset(m_step * 16, K) / (m_step * 16);
+    auto n_step = ukernel_variant.interface.get_n_step();
 
-    ASSERT_EQ(a_tmp, b_tmp);
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP();
+    }
+
+    const auto mr = ukernel_variant.interface.get_mr();
+    const auto kr = ukernel_variant.interface.get_kr();
+    const auto sr = ukernel_variant.interface.get_sr();
+
+    const auto lhs_start_row = rect.start_row();
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K);
+
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
 }
 
 TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
@@ -180,6 +200,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
 
     auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
     auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K);
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
 
     kai_run_lhs_quant_pack_qai8dxp_f32(
         rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
@@ -194,22 +216,29 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
         ref_rhs_qsu4.data(), N, K, K, round_up_multiple(K, 2), round_up_division(N * round_up_multiple(K, 2), 2));
 
     const size_t ref_rhs_qsu4_stride = round_up_division(K, 2);
-    const size_t ref_rhs_scales_stride = round_up_division(K, bl) * sizeof(uint16_t);
+    const size_t ref_rhs_scales_stride = round_up_division(K, bl) * kai_get_datatype_size_in_bytes(scale_dt);
 
     const auto imp_packed_rhs_size =
         kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(N, K, nr, kr, sr, bl, scale_dt);
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
 
-    const auto packed_rhs_start_row = rect.start_col();
+    const auto rhs_start_row = rect.start_col();
     auto rhs_packed_offset =
-        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(packed_rhs_start_row, K, nr, kr, sr, bl, scale_dt);
+        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(rhs_start_row, K, nr, kr, sr, bl, scale_dt);
+    auto rhs_matmul_offset = ukernel_variant.interface.get_rhs_packed_offset(rhs_start_row, K, bl);
+    ASSERT_EQ(rhs_packed_offset, rhs_matmul_offset);
+
+    auto rhs_offset = kai_get_rhs_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(rhs_start_row, ref_rhs_qsu4_stride);
+    size_t bias_offset = rhs_start_row * sizeof(float);
+    size_t scale_offset = rhs_start_row * ref_rhs_scales_stride;
 
     constexpr kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride,
-        reinterpret_cast<const float*>(ref_biases.data()), reinterpret_cast<const float*>(ref_rhs_scales.data()),
-        ref_rhs_scales_stride, imp_packed_rhs.data(), 0, &params);
+        1, rect.width() /* n */, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data() + rhs_offset, ref_rhs_qsu4_stride,
+        reinterpret_cast<const float*>(ref_biases.data() + bias_offset),
+        reinterpret_cast<const float*>(ref_rhs_scales.data() + scale_offset), ref_rhs_scales_stride,
+        imp_packed_rhs.data() + rhs_packed_offset, 0, &params);
 
     const auto dst_stride = N * sizeof(float);
     const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
@@ -222,8 +251,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     // Runs the GEMM micro-kernel.
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        rect.height(), rect.width(), K, bl, imp_packed_lhs.data() + lhs_packed_offset,
-        imp_packed_rhs.data() + rhs_packed_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
+        rect.height(), rect.width(), K, bl, imp_packed_lhs.data() + lhs_matmul_offset,
+        imp_packed_rhs.data() + rhs_matmul_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
         N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
     // Compares the output of the micro-kernels against the output of the reference implementation for the portion
@@ -314,6 +343,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
 
     auto lhs_offset = kai_get_lhs_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, lhs_stride);
     auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(lhs_start_row, K, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.interface.get_lhs_packed_offset(lhs_start_row, K);
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
 
     kai_run_lhs_quant_pack_qai8dxp_f32(
         rect.height() /* m */, K, mr, kr, sr, 0 /* m_idx_start*/,
@@ -327,11 +358,17 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     const auto ref_rhs_qsu4_padded = pad_row<UInt4>(
         ref_rhs_qsu4.data(), K, N, N, round_up_multiple(N, 2), round_up_division(K * round_up_multiple(N, 2), 2));
     const size_t ref_rhs_qsu4_stride = round_up_division(N, 2);
-    const size_t ref_rhs_scales_stride = round_up_division(K, bl) * sizeof(uint16_t);
+    const size_t ref_rhs_scales_stride = round_up_division(K, bl) * kai_get_datatype_size_in_bytes(scale_dt);
 
-    const auto packed_rhs_start_row = rect.start_col();
+    const auto rhs_start_row = rect.start_col();
+    auto rhs_offset = kai_get_rhs_offset_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(rhs_start_row, ref_rhs_qsu4_stride);
     auto rhs_packed_offset =
-        kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(packed_rhs_start_row, K, nr, kr, sr, bl, scale_dt);
+        kai_get_rhs_packed_offset_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(rhs_start_row, K, nr, kr, sr, bl, scale_dt);
+    auto rhs_matmul_offset = ukernel_variant.interface.get_rhs_packed_offset(rhs_start_row, K, bl);
+    ASSERT_EQ(rhs_packed_offset, rhs_matmul_offset);
+
+    size_t bias_offset = rhs_start_row * sizeof(float);
+    size_t scale_offset = rhs_start_row * ref_rhs_scales_stride;
 
     const auto imp_packed_rhs_size =
         kai_get_rhs_packed_size_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(N, K, nr, kr, sr, bl, scale_dt);
@@ -339,9 +376,9 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     constexpr kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params params{
         .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
     kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
-        1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data(), ref_rhs_qsu4_stride,
-        reinterpret_cast<const float*>(ref_biases.data()), ref_rhs_scales.data(), ref_rhs_scales_stride,
-        imp_packed_rhs.data(), 0, &params);
+        1, rect.width() /* n */, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data() + rhs_offset, ref_rhs_qsu4_stride,
+        reinterpret_cast<const float*>(ref_biases.data() + bias_offset), ref_rhs_scales.data() + scale_offset,
+        ref_rhs_scales_stride, imp_packed_rhs.data() + rhs_packed_offset, 0, &params);
 
     const auto dst_stride = N * sizeof(float);
     const auto dst_offset = ukernel_variant.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride);
@@ -353,8 +390,8 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     ASSERT_EQ(imp_dst_size, ref_dst.size());
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        rect.height(), rect.width(), K, bl, imp_packed_lhs.data() + lhs_packed_offset,
-        imp_packed_rhs.data() + rhs_packed_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
+        rect.height(), rect.width(), K, bl, imp_packed_lhs.data() + lhs_matmul_offset,
+        imp_packed_rhs.data() + rhs_matmul_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
         N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
     // Compares the output of the micro-kernels against the output of the reference implementation.

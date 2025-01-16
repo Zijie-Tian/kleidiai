@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -48,6 +48,51 @@ static const std::array<UkernelVariant<kai_matmul_clamp_f32_qai8dxp_qsi8cxp_uker
           "kai_matmul_clamp_f32_qai8dxp4x8_qsi8cxp4x8_16x4_neon_i8mm", cpu_has_i8mm}}};
 
 class MatMulTest_f32_qai8dxp_qsi8cxp : public UkernelVariantTest {};
+
+TEST_P(MatMulTest_f32_qai8dxp_qsi8cxp, Offset_RHS) {
+    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi8cxp.at(variant_index);
+
+    if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
+        GTEST_SKIP();
+    }
+
+    const size_t K = matmul_shape.k;
+    const auto nr = ukernel_variant.interface.get_nr();
+    const auto kr = ukernel_variant.interface.get_kr();
+    const auto sr = ukernel_variant.interface.get_sr();
+
+    auto n_step = ukernel_variant.interface.get_n_step();
+
+    auto rhs_packed_offset_kxn = kai_get_rhs_packed_offset_rhs_pack_kxn_qsi8cxp_qsi8cx_neon(n_step, K, nr, kr, sr);
+    auto rhs_packed_offset_nxk = kai_get_rhs_packed_offset_rhs_pack_nxk_qsi8cxp_qsi8cx_neon(n_step, K, nr, kr, sr);
+
+    ASSERT_EQ(rhs_packed_offset_kxn, rhs_packed_offset_nxk);
+
+    auto rhs_matmul_offset = ukernel_variant.interface.get_rhs_packed_offset(n_step, K);
+    ASSERT_EQ(rhs_packed_offset_kxn, rhs_matmul_offset);
+}
+
+TEST_P(MatMulTest_f32_qai8dxp_qsi8cxp, Offset_LHS) {
+    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi8cxp.at(variant_index);
+
+    if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
+        GTEST_SKIP();
+    }
+
+    const size_t K = matmul_shape.k;
+    const auto mr = ukernel_variant.interface.get_mr();
+    const auto kr = ukernel_variant.interface.get_kr();
+    const auto sr = ukernel_variant.interface.get_sr();
+
+    auto m_step = ukernel_variant.interface.get_m_step();
+
+    auto lhs_packed_offset = kai_get_lhs_packed_offset_lhs_quant_pack_qai8dxp_f32(m_step, K, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.interface.get_lhs_packed_offset(m_step, K);
+
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
+}
 
 TEST_P(MatMulTest_f32_qai8dxp_qsi8cxp, EndToEnd_RHS_nxk_qsi8cx) {
     auto& [variant_index, matmul_shape] = GetParam();

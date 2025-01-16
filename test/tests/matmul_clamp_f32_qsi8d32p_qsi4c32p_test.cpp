@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -45,15 +45,20 @@ namespace kai::test {
 // Interface for the LHS and RHS packed size and packing functions
 using kai_get_lhs_packed_size_func_t = decltype(&kai_get_lhs_packed_size_lhs_quant_pack_qsi8d32p_f32);
 using kai_get_rhs_packed_size_func_t = decltype(&kai_get_rhs_packed_size_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
-using kai_lhs_pack_func_t = decltype(&kai_run_lhs_quant_pack_qsi8d32p_f32);
-using kai_rhs_pack_func_t = decltype(&kai_run_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
+using kai_get_lhs_packed_offset_func_t = decltype(&kai_get_lhs_packed_offset_lhs_quant_pack_qsi8d32p_f32);
+using kai_get_rhs_packed_offset_func_t =
+    decltype(&kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
+using kai_run_lhs_pack_func_t = decltype(&kai_run_lhs_quant_pack_qsi8d32p_f32);
+using kai_run_rhs_pack_func_t = decltype(&kai_run_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
 
 // Micro-kernel interface
 struct kai_matmul_f32_qsi8d32p_qsi4c32p_pack_functions {
     kai_get_lhs_packed_size_func_t lhs_packed_size;
     kai_get_rhs_packed_size_func_t rhs_packed_size;
-    kai_lhs_pack_func_t lhs_pack;
-    kai_rhs_pack_func_t rhs_pack;
+    kai_get_lhs_packed_offset_func_t get_lhs_packed_offset;
+    kai_get_rhs_packed_offset_func_t get_rhs_packed_offset;
+    kai_run_lhs_pack_func_t lhs_pack;
+    kai_run_rhs_pack_func_t rhs_pack;
 };
 
 static const std::array<
@@ -83,6 +88,47 @@ static const std::array<
              rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon)}};
 
 class MatMulTest_f32_qsi8d32p_qsi4c32p : public UkernelVariantTest {};
+
+TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_RHS) {
+    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
+
+    if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
+        GTEST_SKIP();
+    }
+
+    const size_t bl = 32;
+    const size_t K = matmul_shape.k;
+    const auto nr = ukernel_variant.ukernel.interface.get_nr();
+    const auto kr = ukernel_variant.ukernel.interface.get_kr();
+    auto n_step = ukernel_variant.ukernel.interface.get_n_step();
+
+    auto rhs_packed_offset = ukernel_variant.pack_interface.get_rhs_packed_offset(n_step, K, nr, kr, bl);
+    auto rhs_matmul_offset = ukernel_variant.ukernel.interface.get_rhs_packed_offset(n_step, K, bl);
+    ASSERT_EQ(rhs_packed_offset, rhs_matmul_offset);
+}
+
+TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_LHS) {
+    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
+
+    if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
+        GTEST_SKIP();
+    }
+
+    const size_t bl = 32;
+    const size_t K = matmul_shape.k;
+    const auto mr = ukernel_variant.ukernel.interface.get_mr();
+    const auto kr = ukernel_variant.ukernel.interface.get_kr();
+    const auto sr = ukernel_variant.ukernel.interface.get_sr();
+
+    auto m_step = ukernel_variant.ukernel.interface.get_m_step();
+
+    auto lhs_packed_offset = ukernel_variant.pack_interface.get_lhs_packed_offset(m_step, K, bl, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.ukernel.interface.get_lhs_packed_offset(m_step, K, bl);
+
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
+}
 
 TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
     const auto& [variant_index, matmul_shape] = GetParam();

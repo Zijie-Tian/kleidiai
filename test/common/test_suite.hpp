@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -27,15 +27,20 @@
      kai_get_dst_offset_matmul_## name,        \
      kai_get_dst_size_matmul_## name,          \
      kai_run_matmul_## name}
-// clang-format on
 
 #define UKERNEL_MATMUL_PACK_VARIANT(name, features_check, lhs_pack, rhs_pack)                           \
     {                                                                                                   \
-        {UKERNEL_MATMUL_VARIANT(name), "kai_matmul_" #name, features_check}, {                          \
-            kai_get_lhs_packed_size_##lhs_pack, kai_get_rhs_packed_size_##rhs_pack, kai_run_##lhs_pack, \
-                kai_run_##rhs_pack                                                                      \
+        {UKERNEL_MATMUL_VARIANT(name), "kai_matmul_" #name, features_check},                            \
+        {                                                                                               \
+            kai_get_lhs_packed_size_##lhs_pack,                                                         \
+            kai_get_rhs_packed_size_##rhs_pack,                                                         \
+            kai_get_lhs_packed_offset_##lhs_pack,                                                       \
+            kai_get_rhs_packed_offset_##rhs_pack,                                                       \
+            kai_run_##lhs_pack,                                                                         \
+            kai_run_##rhs_pack                                                                          \
         }                                                                                               \
     }
+// clang-format on
 
 namespace kai::test {
 
