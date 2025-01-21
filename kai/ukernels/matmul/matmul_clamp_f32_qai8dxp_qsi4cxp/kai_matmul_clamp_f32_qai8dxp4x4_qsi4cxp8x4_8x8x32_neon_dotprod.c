@@ -4,6 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+// Do not flag up inline assembly blocks
+#pragma GCC diagnostic ignored "-Woverlength-strings"
+
 #if !defined(__ARM_FEATURE_DOTPROD)
 #error "Dotprod extension required to compile this micro-kernel"
 #else  // Architectural features check.

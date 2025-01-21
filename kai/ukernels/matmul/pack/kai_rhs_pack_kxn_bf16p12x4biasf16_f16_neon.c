@@ -4,6 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+// Do not flag up inline assembly blocks
+#pragma GCC diagnostic ignored "-Woverlength-strings"
+
 #if !defined(__aarch64__) || !defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC) || \
     !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_BF16, FEAT_FP16.

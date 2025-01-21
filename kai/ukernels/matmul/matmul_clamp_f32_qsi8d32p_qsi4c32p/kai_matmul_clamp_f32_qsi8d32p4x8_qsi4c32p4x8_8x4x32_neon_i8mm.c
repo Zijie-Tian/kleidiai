@@ -1,9 +1,12 @@
-
 //
 // SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
+// Do not flag up inline assembly blocks
+#pragma GCC diagnostic ignored "-Woverlength-strings"
+
 #if !defined(__ARM_FEATURE_MATMUL_INT8)
 #error "i8mm extension required to compile this micro-kernel"
 #else

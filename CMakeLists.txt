@@ -48,7 +48,6 @@ else()
         "-Wformat-security"
         "-Wformat=2"
         "-Winit-self"
-        "-Wno-overlength-strings"
         "-Wstrict-overflow=2"
         "-Wswitch-default"
         "-Wcast-qual"

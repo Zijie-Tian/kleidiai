@@ -22,7 +22,6 @@ def kai_gcc_warn_copts():
         "-Wformat-security",
         "-Wformat=2",
         "-Winit-self",
-        "-Wno-overlength-strings",
         "-Wstrict-overflow=2",
         "-Wswitch-default",
         "-Wno-vla",
