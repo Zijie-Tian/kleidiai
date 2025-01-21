@@ -105,12 +105,17 @@ bool is_output_correct(
 
 int main() {
     int ret = 0;
+    // 1x1 Convolution operator in NHWC format.
+    const size_t nhwc_n = 2;
+    const size_t nhwc_h = 2;
+    const size_t nhwc_w = 4;
+    const size_t nhwc_c_in = 4;    // Input channels
+    const size_t nhwc_c_out = 24;  // Output channels
 
-    // Parameters of the matrix multiplication. Change these values to see how the micro-kernels operate on different
-    // sized matrices
-    const size_t M = 6;   // Rows of LHS and DST matrices
-    const size_t N = 24;  // Columns of RHS and DST matrices, and length of the Bias vector.
-    const size_t K = 4;   // Columns of LHS, rows of RHS matrices
+    // Map NHWC of operator to GEMM terminology
+    const size_t M = nhwc_h * nhwc_w * nhwc_n;  // Rows of LHS and DST matrices
+    const size_t N = nhwc_c_out;                // Columns of RHS and DST matrices
+    const size_t K = nhwc_c_in;                 // Columns of LHS, rows of RHS matrices
 
     const size_t lhs_size = M * K;
     const size_t rhs_size = N * K;
@@ -186,22 +191,39 @@ int main() {
 
     float16_t* dst = new float16_t[dst_size];
 
-    const auto timer_matmul_start = std::chrono::high_resolution_clock::now();
+    // Framework scheduling params
 
-    ukernel.run_matmul(
-        M, N, K,           // Dimensions
-        lhs,               // LHS
-        lhs_stride,        // LHS stride
-        rhs_packed,        // RHS packed
-        dst,               // DST
-        dst_stride_row,    // DST stride (row)
-        dst_stride_col,    // DST stride (col)
-        -FLT_MAX, FLT_MAX  // Min and max for the clamp operation
-    );
+    // Example alternative values to try. ukernel.get_m_step() * 2 or M;
+    const size_t m_step = ukernel.get_m_step();  // Scheduling along M
 
-    const auto timer_matmul_end = std::chrono::high_resolution_clock::now();
-    const auto time_matmul =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(timer_matmul_end - timer_matmul_start);
+    // Example alternative values to try.  n_step = N;
+    const size_t n_step = ukernel.get_n_step();  // Scheduling along N
+
+    for (size_t i_m_step = 0; i_m_step < M; i_m_step += m_step) {
+        for (size_t i_n_step = 0; i_n_step < N; i_n_step += n_step) {
+            // Support functions return offset in bytes
+            const uint8_t* lhs_ptr =
+                (const uint8_t*)lhs + (ukernel.get_lhs_packed_offset(i_m_step, K * sizeof(uint16_t)));
+            const uint8_t* rhs_ptr = (const uint8_t*)rhs_packed + (ukernel.get_rhs_packed_offset(i_n_step, K));
+            uint8_t* dst_ptr = (uint8_t*)dst + (ukernel.get_dst_offset(i_m_step, i_n_step, N * sizeof(uint16_t)));
+#ifdef KAI_DEBUG
+            printf("Processing a %zux%zu ouptut block starting at (%zu, %zu)\n", m_step, n_step, i_m_step, i_n_step);
+#endif
+            const size_t actual_m = std::min(M - i_m_step, m_step);
+            const size_t actual_n = std::min(N - i_n_step, n_step);
+
+            ukernel.run_matmul(
+                actual_m, actual_n, K,  // Dimensions
+                lhs_ptr,                // LHS
+                lhs_stride,             // LHS stride
+                rhs_ptr,                // RHS packed
+                dst_ptr,                // DST
+                dst_stride_row,         // DST stride (row)
+                dst_stride_col,         // DST stride (col)
+                -FLT_MAX, FLT_MAX       // Min and max for the clamp operation
+            );
+        }
+    }
 
 #ifdef KAI_DEBUG
     print_matrix(M, N, "dst", dst);
@@ -213,7 +235,6 @@ int main() {
     std::cout << "- ukernel: matmul_clamp_f16_f16_f16p16x1biasf16_6x16x8_neon_mla\n";
     if (is_valid) {
         std::cout << "- Status: PASSED\n";
-        std::cout << "- Performance: " << time_matmul.count() << "ns\n";
     } else {
         std::cout << "- Status: FAILED\n";
         ret = 1;
