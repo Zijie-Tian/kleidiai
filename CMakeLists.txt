@@ -51,6 +51,7 @@ else()
         "-Wno-overlength-strings"
         "-Wstrict-overflow=2"
         "-Wswitch-default"
+        "-Wcast-qual"
     )
 
     set(KLEIDIAI_WARNING_FLAGS_CXX

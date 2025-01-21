@@ -161,10 +161,10 @@ void kai_run_matmul_clamp_f32_qsi8d32p1x4_qsi4c32p4vlx4_1x4vl_sme2_sdot(
     const size_t mr = kai_get_mr_matmul_clamp_f32_qsi8d32p1x4_qsi4c32p4vlx4_1x4vl_sme2_sdot();
     const size_t nr = kai_get_nr_matmul_clamp_f32_qsi8d32p1x4_qsi4c32p4vlx4_1x4vl_sme2_sdot();
 
-    const uint16_t* lhs_scales =
-        (uint16_t*)((const int8_t*)lhs_packed + lhs_packed_stride - (mr * num_blocks) * kai_num_bytes_multiplier_lhs);
-    const uint16_t* rhs_scales =
-        (uint16_t*)((const uint8_t*)rhs_packed + rhs_packed_stride - (nr * num_blocks) * kai_num_bytes_multiplier_rhs);
+    const uint16_t* lhs_scales = (const uint16_t*)((const int8_t*)lhs_packed + lhs_packed_stride -
+                                                   (mr * num_blocks) * kai_num_bytes_multiplier_lhs);
+    const uint16_t* rhs_scales = (const uint16_t*)((const uint8_t*)rhs_packed + rhs_packed_stride -
+                                                   (nr * num_blocks) * kai_num_bytes_multiplier_rhs);
 
     __asm__ volatile(
         // Switch to streaming mode with ZA enabling

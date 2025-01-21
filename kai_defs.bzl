@@ -26,6 +26,7 @@ def kai_gcc_warn_copts():
         "-Wstrict-overflow=2",
         "-Wswitch-default",
         "-Wno-vla",
+        "-Wcast-qual",
     ]
 
 def kai_gcc_warn_cxxopts():

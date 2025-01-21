@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -64,8 +64,8 @@ void kai_run_lhs_quant_pack_bf16p1x4_f32_neon(
 
     KAI_ASSUME(m_idx_start == 0);
 
-    const float* lhs_ptr = (float*)(lhs);
-    uint16_t* lhs_packed_ptr = (uint16_t*)(lhs_packed);
+    const float* lhs_ptr = lhs;
+    uint16_t* lhs_packed_ptr = lhs_packed;
 
     // Unroll two 256-bit loops
     size_t i = 0;

@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -61,7 +61,7 @@ void kai_run_rhs_pack_kxn_bf16p12x4biasf32_f16_neon(
     const void* in = rhs;
     void* out = rhs_packed;
     const size_t in_stride = rhs_stride;
-    uint16_t* pad_row = (uint16_t*)rhs;
+    const uint16_t* pad_row = rhs;
 
     // Fill zeros if bias is nullptr
     size_t bias_step = nr * sizeof(float);
@@ -72,7 +72,7 @@ void kai_run_rhs_pack_kxn_bf16p12x4biasf32_f16_neon(
         bias_step = 0;
     }
 
-    const void* bias_ptr = bias == NULL ? (void*)zero_bias : (void*)bias;
+    const void* bias_ptr = bias == NULL ? (const void*)zero_bias : bias;
 
     size_t out_stride = kai_nr * kai_roundup(height, kai_kr) * sizeof(uint16_t) + kai_nr * sizeof(uint32_t);
 

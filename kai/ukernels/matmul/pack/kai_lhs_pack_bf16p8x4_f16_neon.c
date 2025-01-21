@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -69,7 +69,7 @@ void kai_run_lhs_pack_bf16p8x4_f16_neon(
         size_t width = k;
 
         for (size_t y = 0; y < height; y++) {
-            in[y] = (char*)lhs + (block_y + y) * lhs_stride;
+            in[y] = (const char*)lhs + (block_y + y) * lhs_stride;
         }
 
         __asm__ __volatile__(
