@@ -48,8 +48,6 @@ else()
         "-Wformat-security"
         "-Wformat=2"
         "-Winit-self"
-        "-Wno-ignored-attributes"
-        "-Wno-misleading-indentation"
         "-Wno-overlength-strings"
         "-Wstrict-overflow=2"
         "-Wswitch-default"
