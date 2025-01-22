@@ -10,6 +10,10 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- Fixes:
+  - Fix compilation warnings detected by `-Wcast-qual -Wmissing-prototypes -Wstrict-prototypes -Woverlength-strings` compiler options.
+    - Support compiling the project with the above compilation options enabled.
+
 ## v1.2.0
 
 - New SME micro-kernels:
