@@ -8,6 +8,8 @@
 #error This file must be compiled for AArch64, FEAT_BF16.
 #else  // Architectural features check.
 
+#include "kai_lhs_quant_pack_bf16p1x4_f32_neon.h"
+
 #include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>

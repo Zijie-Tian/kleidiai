@@ -10,6 +10,8 @@
 
 #define MAX_MR 8
 
+#include "kai_lhs_quant_pack_bf16p8x4_f32_neon.h"
+
 #include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -50,8 +52,8 @@ size_t kai_get_lhs_packed_size_lhs_quant_pack_bf16p8x4_f32_neon(size_t m, size_t
 }
 
 void kai_run_lhs_quant_pack_bf16p8x4_f32_neon(
-    size_t m, size_t k, size_t mr, size_t kr, size_t sr, size_t m_idx_start, const float* lhs, size_t lhs_stride,
-    uint16_t* lhs_packed) {
+    size_t m, size_t k, size_t mr, size_t kr, size_t sr, size_t m_idx_start, const void* lhs, size_t lhs_stride,
+    void* lhs_packed) {
     KAI_ASSUME(mr == kai_mr);
     KAI_ASSUME(sr == kai_sr);
     KAI_ASSUME(kr == kai_kr);

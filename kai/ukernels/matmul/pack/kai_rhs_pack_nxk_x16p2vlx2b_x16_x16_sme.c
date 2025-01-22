@@ -11,6 +11,8 @@
 #error This file must be compiled for AArch64, FEAT_SVE2.
 #else  // Architectural features check.
 
+#include "kai_rhs_pack_nxk_x16p2vlx2b_x16_x16_sme.h"
+
 #include <stddef.h>
 #include <stdint.h>
 

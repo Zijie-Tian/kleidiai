@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -22,10 +22,10 @@ size_t kai_get_n_step_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(void);
 /// Gets the offset in bytes to the data element in the RHS matrix buffer.
 ///
 /// @param[in] n_idx Column index.
-/// @param[in] rhs_offset Row stride in bytes of the RHS matrix.
+/// @param[in] rhs_stride Row stride in bytes of the RHS matrix.
 ///
 /// @return The offset in bytes to the data element.
-size_t kai_get_rhs_offset_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(size_t n_idx, size_t rhs_offset);
+size_t kai_get_rhs_offset_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(size_t n_idx, size_t rhs_stride);
 
 /// Gets the offset in bytes to the data element in the bias buffer.
 ///
@@ -33,6 +33,13 @@ size_t kai_get_rhs_offset_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(size_t n_idx
 ///
 /// @return The offset in bytes to the data element.
 size_t kai_get_bias_offset_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(size_t n_idx);
+
+/// Gets the row stride in bytes to the packed RHS matrix.
+///
+/// @param[in] k Number of columns.
+///
+/// @return Row stride in bytes to the packed RHS matrix.
+size_t kai_get_rhs_packed_stride_rhs_pack_nxk_f32p2vlx1biasf32_f32_f32_sme(size_t k);
 
 /// Gets the offset in bytes to the data element in the packed RHS buffer.
 ///

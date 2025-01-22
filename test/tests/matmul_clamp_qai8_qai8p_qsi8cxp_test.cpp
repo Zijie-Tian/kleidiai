@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -182,7 +182,7 @@ struct TestReference {
 };
 
 /// Generate test reference data
-TestReference get_test_reference(const MatMulShape& shape, const MatMulVariant& variant) {
+static TestReference get_test_reference(const MatMulShape& shape, const MatMulVariant& variant) {
     // ============================================================
     // Generates input and reference output data
     // ============================================================
@@ -282,7 +282,7 @@ TestReference get_test_reference(const MatMulShape& shape, const MatMulVariant& 
 }
 
 /// Test LHS packing
-void test_lhs_pack(
+static void test_lhs_pack(
     const MatMulShape& shape, const MatMulVariant& variant, const Rect& output_area, const TestReference& reference) {
     KAI_ASSUME(variant.lhs_pack.has_value());
 
@@ -313,7 +313,7 @@ void test_lhs_pack(
 }
 
 /// Test RHS packing
-void test_rhs_pack(
+static void test_rhs_pack(
     const MatMulShape& shape, const MatMulVariant& variant, const Rect& output_area, const TestReference& reference) {
     const auto imp_packed_rhs_size = variant.rhs_pack.get_packed_rhs_size(shape.n, shape.k);
     ASSERT_EQ(imp_packed_rhs_size, reference.packed_rhs.size());
@@ -349,7 +349,7 @@ void test_rhs_pack(
 }
 
 /// Test MatMul of GEMM like kernel
-void test_matmul(
+static void test_matmul(
     const MatMulShape& shape, const MatMulVariant& variant, const Rect& output_area, const TestReference& reference) {
     const auto imp_dst_size = variant.matmul.get_dst_size(shape.m, shape.n);
     ASSERT_EQ(imp_dst_size, reference.dst_qsi8_clamped.size());

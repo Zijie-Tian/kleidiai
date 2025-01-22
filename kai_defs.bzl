@@ -28,12 +28,20 @@ def kai_gcc_warn_copts():
         "-Wcast-qual",
     ]
 
+# GCC/CLANG C only warning options
+def kai_gcc_warn_conlyopts():
+    return [
+        "-Wmissing-prototypes",
+        "-Wstrict-prototypes",
+    ]
+
 def kai_gcc_warn_cxxopts():
     return kai_gcc_warn_copts() + [
         "-Wctor-dtor-privacy",
         "-Weffc++",
         "-Woverloaded-virtual",
         "-Wsign-promo",
+        "-Wmissing-declarations",
     ]
 
 # GCC/CLANG compiler options
@@ -142,6 +150,7 @@ def _kai_c_cxx_common(name, copts_def_func, **kwargs):
         extra_copts.append("-fno-tree-vectorize")
 
     kwargs["copts"] = kwargs.get("copts", []) + copts_def_func(cpu_uarch) + extra_copts
+    kwargs["conlyopts"] = kai_gcc_warn_conlyopts()
     kwargs["deps"] = ["//:common"] + kwargs.get("deps", [])
     kwargs["linkstatic"] = kwargs.get("linkstatic", True)
 

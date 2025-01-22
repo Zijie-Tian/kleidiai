@@ -12,6 +12,8 @@
 #error This file must be compiled for AArch64, FEAT_BF16, FEAT_FP16.
 #else  // Architectural features check.
 
+#include "kai_rhs_pack_kxn_bf16p12x4biasf32_f16_neon.h"
+
 #include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -36,11 +36,11 @@ if(KLEIDIAI_ENABLE_CLANG_TIDY)
 endif()
 
 if(MSVC)
-    set(KLEIDIAI_WARNING_FLAGS_C
+    set(KLEIDIAI_WARNING_FLAGS_BASE
         # "/Wall" - This flag is disabled until the kernel library is cleaned up.
     )
 else()
-    set(KLEIDIAI_WARNING_FLAGS_C
+    set(KLEIDIAI_WARNING_FLAGS_BASE
         "-Wall"
         "-Wdisabled-optimization"
         "-Werror"
@@ -53,16 +53,24 @@ else()
         "-Wcast-qual"
     )
 
+    # C only flags not present in C++
+    set(KLEIDIAI_WARNING_FLAGS_C
+        "-Wmissing-prototypes"
+        "-Wstrict-prototypes"
+    )
+
     set(KLEIDIAI_WARNING_FLAGS_CXX
         "-Wctor-dtor-privacy"
         "-Weffc++"
         "-Woverloaded-virtual"
         "-Wsign-promo"
+        "-Wmissing-declarations"
     )
 endif()
 
 set(KLEIDIAI_WARNING_FLAGS
-    ${KLEIDIAI_WARNING_FLAGS_C}
+    ${KLEIDIAI_WARNING_FLAGS_BASE}
+    $<$<COMPILE_LANGUAGE:C>:${KLEIDIAI_WARNING_FLAGS_C}>
     $<$<COMPILE_LANGUAGE:CXX>:${KLEIDIAI_WARNING_FLAGS_CXX}>
 )
 

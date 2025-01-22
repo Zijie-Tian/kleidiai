@@ -13,6 +13,8 @@
 
 #define MAX_NR 12
 
+#include "kai_rhs_quant_pack_kxn_bf16p12x4biasf32_f32_neon.h"
+
 #include <arm_neon.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -24,9 +26,8 @@ static const size_t kai_nr = 12;
 static const size_t kai_kr = 4;
 static const size_t kai_sr = 1;
 
-size_t kai_get_n_step_rhs_quant_pack_kxn_bf16p12x4biasf32_f32_neon(size_t nr) {
-    KAI_ASSUME(kai_nr == nr);
-    return nr;
+size_t kai_get_n_step_rhs_quant_pack_kxn_bf16p12x4biasf32_f32_neon(void) {
+    return kai_nr;
 }
 
 size_t kai_get_rhs_offset_rhs_quant_pack_kxn_bf16p12x4biasf32_f32_neon(size_t n_idx) {
