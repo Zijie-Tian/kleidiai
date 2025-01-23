@@ -17,7 +17,6 @@ def kai_gcc_warn_copts():
     return [
         "-Wall",
         "-Wdisabled-optimization",
-        "-Werror",
         "-Wextra",
         "-Wformat-security",
         "-Wformat=2",

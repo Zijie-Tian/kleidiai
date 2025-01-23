@@ -43,7 +43,6 @@ else()
     set(KLEIDIAI_WARNING_FLAGS_BASE
         "-Wall"
         "-Wdisabled-optimization"
-        "-Werror"
         "-Wextra"
         "-Wformat-security"
         "-Wformat=2"
