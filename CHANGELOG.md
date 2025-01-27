@@ -10,10 +10,12 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- Update FP16 example to use NHWC input
 - Fixes:
   - Fix compilation warnings detected by `-Wcast-qual -Wmissing-prototypes -Wstrict-prototypes -Woverlength-strings` compiler options.
     - Support compiling the project with the above compilation options enabled.
   - Remove `-Werror` from default build flags as to not cause integration problems
+  - Expose the rhs_packed_stride in the header file
 
 ## v1.2.0
 
