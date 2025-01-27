@@ -36,6 +36,8 @@
             kai_get_rhs_packed_size_##rhs_pack,                                                         \
             kai_get_lhs_packed_offset_##lhs_pack,                                                       \
             kai_get_rhs_packed_offset_##rhs_pack,                                                       \
+            kai_get_lhs_offset_##lhs_pack,                                                              \
+            kai_get_rhs_offset_##rhs_pack,                                                              \
             kai_run_##lhs_pack,                                                                         \
             kai_run_##rhs_pack                                                                          \
         }                                                                                               \

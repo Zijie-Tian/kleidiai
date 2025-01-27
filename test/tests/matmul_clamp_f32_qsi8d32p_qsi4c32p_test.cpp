@@ -31,6 +31,7 @@
 #include "test/common/cpu_info.hpp"
 #include "test/common/float16.hpp"
 #include "test/common/int4.hpp"
+#include "test/common/matrix_portion.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/round.hpp"
 #include "test/common/test_suite.hpp"
@@ -48,6 +49,8 @@ using kai_get_rhs_packed_size_func_t = decltype(&kai_get_rhs_packed_size_rhs_pac
 using kai_get_lhs_packed_offset_func_t = decltype(&kai_get_lhs_packed_offset_lhs_quant_pack_qsi8d32p_f32);
 using kai_get_rhs_packed_offset_func_t =
     decltype(&kai_get_rhs_packed_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
+using kai_get_lhs_offset_func_t = decltype(&kai_get_lhs_offset_lhs_quant_pack_qsi8d32p_f32);
+using kai_get_rhs_offset_func_t = decltype(&kai_get_rhs_offset_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
 using kai_run_lhs_pack_func_t = decltype(&kai_run_lhs_quant_pack_qsi8d32p_f32);
 using kai_run_rhs_pack_func_t = decltype(&kai_run_rhs_pack_nxk_qsi4c32pscalef16_qsu4c32s16s0);
 
@@ -57,6 +60,8 @@ struct kai_matmul_f32_qsi8d32p_qsi4c32p_pack_functions {
     kai_get_rhs_packed_size_func_t rhs_packed_size;
     kai_get_lhs_packed_offset_func_t get_lhs_packed_offset;
     kai_get_rhs_packed_offset_func_t get_rhs_packed_offset;
+    kai_get_lhs_offset_func_t get_lhs_offset;
+    kai_get_rhs_offset_func_t get_rhs_offset;
     kai_run_lhs_pack_func_t lhs_pack;
     kai_run_rhs_pack_func_t rhs_pack;
 };
@@ -87,10 +92,13 @@ static const std::array<
              clamp_f32_qsi8d32p1x4_qsi4c32p4vlx4_1x4vl_sme2_sdot, cpu_has_sme2, lhs_quant_pack_qsi8d32p_f32_neon,
              rhs_pack_nxk_qsi4c32ps1s0scalef16_qsu4c32s16s0_neon)}};
 
-class MatMulTest_f32_qsi8d32p_qsi4c32p : public UkernelVariantTest {};
+using MatMulTestParams_withPortion = std::tuple<size_t, MatMulShape, MatrixPortion>;
+
+class UkernelVariantTest_withPortion : public ::testing::TestWithParam<MatMulTestParams_withPortion> {};
+class MatMulTest_f32_qsi8d32p_qsi4c32p : public UkernelVariantTest_withPortion {};
 
 TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_RHS) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
@@ -98,18 +106,29 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_RHS) {
     }
 
     const size_t bl = 32;
+    const size_t M = matmul_shape.m;
+    const size_t N = matmul_shape.n;
     const size_t K = matmul_shape.k;
+
     const auto nr = ukernel_variant.ukernel.interface.get_nr();
     const auto kr = ukernel_variant.ukernel.interface.get_kr();
-    auto n_step = ukernel_variant.ukernel.interface.get_n_step();
 
-    auto rhs_packed_offset = ukernel_variant.pack_interface.get_rhs_packed_offset(n_step, K, nr, kr, bl);
-    auto rhs_matmul_offset = ukernel_variant.ukernel.interface.get_rhs_packed_offset(n_step, K, bl);
+    auto n_step = ukernel_variant.ukernel.interface.get_n_step();
+    auto m_step = ukernel_variant.ukernel.interface.get_m_step();
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP() << "Test Portion size is 0!";
+    }
+
+    const auto rhs_start_row = rect.start_col();
+    auto rhs_packed_offset = ukernel_variant.pack_interface.get_rhs_packed_offset(rhs_start_row, K, nr, kr, bl);
+    auto rhs_matmul_offset = ukernel_variant.ukernel.interface.get_rhs_packed_offset(rhs_start_row, K, bl);
     ASSERT_EQ(rhs_packed_offset, rhs_matmul_offset);
 }
 
 TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_LHS) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
@@ -117,21 +136,31 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_LHS) {
     }
 
     const size_t bl = 32;
+    const size_t M = matmul_shape.m;
+    const size_t N = matmul_shape.n;
     const size_t K = matmul_shape.k;
+
     const auto mr = ukernel_variant.ukernel.interface.get_mr();
     const auto kr = ukernel_variant.ukernel.interface.get_kr();
     const auto sr = ukernel_variant.ukernel.interface.get_sr();
 
     auto m_step = ukernel_variant.ukernel.interface.get_m_step();
+    auto n_step = ukernel_variant.ukernel.interface.get_n_step();
 
-    auto lhs_packed_offset = ukernel_variant.pack_interface.get_lhs_packed_offset(m_step, K, bl, mr, kr, sr);
-    auto lhs_matmul_offset = ukernel_variant.ukernel.interface.get_lhs_packed_offset(m_step, K, bl);
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP() << "Test Portion size is 0!";
+    }
+
+    const auto lhs_start_row = rect.start_row();
+    auto lhs_packed_offset = ukernel_variant.pack_interface.get_lhs_packed_offset(lhs_start_row, K, bl, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.ukernel.interface.get_lhs_packed_offset(lhs_start_row, K, bl);
 
     ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
 }
 
 TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
-    const auto& [variant_index, matmul_shape] = GetParam();
+    const auto& [variant_index, matmul_shape, portion] = GetParam();
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
@@ -154,6 +183,16 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
         GTEST_SKIP() << "Kernel does not support M != 1";
     }
 
+    auto m_step = ukernel_variant.ukernel.interface.get_m_step();
+    ASSERT_TRUE(m_step % mr == 0);
+
+    auto n_step = ukernel_variant.ukernel.interface.get_n_step();
+    ASSERT_TRUE(n_step % nr == 0);
+
+    const auto rect = portion.compute_portion(M, N, m_step, n_step);
+    if (rect.height() == 0 || rect.width() == 0) {
+        GTEST_SKIP() << "Test Portion size is 0!";
+    }
     // Generates input data.
     const auto ref_lhs = fill_random<float>(M * K, seed + 0);
     const auto ref_rhs = fill_random<float>(N * K, seed + 1);
@@ -169,11 +208,20 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
         nullptr, bl, nullptr, std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
     // Runs the LHS packing micro-kernel.
+    const auto lhs_start_row = rect.start_row();
     const auto imp_packed_lhs_size = ukernel_variant.pack_interface.lhs_packed_size(M, K, bl, mr, kr, sr);
     std::vector<uint8_t> imp_packed_lhs(imp_packed_lhs_size);
+
+    auto lhs_stride = K * sizeof(float);
+    auto lhs_offset = ukernel_variant.pack_interface.get_lhs_offset(lhs_start_row, lhs_stride);
+    auto lhs_packed_offset = ukernel_variant.pack_interface.get_lhs_packed_offset(lhs_start_row, K, bl, mr, kr, sr);
+    auto lhs_matmul_offset = ukernel_variant.ukernel.interface.get_lhs_packed_offset(lhs_start_row, K, bl);
+
+    ASSERT_EQ(lhs_packed_offset, lhs_matmul_offset);
+
     ukernel_variant.pack_interface.lhs_pack(
-        M, K, bl, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data()), K * sizeof(float),
-        imp_packed_lhs.data());
+        rect.height() /* m */, K, bl, mr, kr, sr, 0, reinterpret_cast<const float*>(ref_lhs.data() + lhs_offset),
+        lhs_stride, imp_packed_lhs.data() + lhs_packed_offset);
 
     // Runs the RHS packing micro-kernel.
     const auto ref_rhs_qsu4 = cast_qsu4_qsi4(ref_rhs_qsi4.data(), N * K);
@@ -182,24 +230,40 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
 
     const auto imp_packed_rhs_size = ukernel_variant.pack_interface.rhs_packed_size(N, K, nr, kr, bl);
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
+    const auto rhs_start_row = rect.start_col();
+    auto rhs_packed_offset = ukernel_variant.pack_interface.get_rhs_packed_offset(rhs_start_row, K, nr, kr, bl);
+    auto rhs_matmul_offset = ukernel_variant.ukernel.interface.get_rhs_packed_offset(rhs_start_row, K, bl);
+    ASSERT_EQ(rhs_packed_offset, rhs_matmul_offset);
+
     const kai_rhs_pack_qs4cxs1s0_param params{.lhs_zero_point = 1, .rhs_zero_point = 8};
     ukernel_variant.pack_interface.rhs_pack(
         1, N, K, nr, kr, sr, bl, ref_rhs_qsu4_scale_f16.data(), nullptr, imp_packed_rhs.data(), 0, &params);
+
+    const auto dst_stride_row = N * sizeof(float);
+    const auto dst_stride_col = sizeof(float);
+    const auto dst_offset =
+        ukernel_variant.ukernel.interface.get_dst_offset(rect.start_row(), rect.start_col(), dst_stride_row);
+    const auto ref_dst_offset = rect.start_row() * dst_stride_row + rect.start_col() * dst_stride_col;
+    ASSERT_EQ(dst_offset, ref_dst_offset);
 
     // Runs the GEMM micro-kernel.
     const auto imp_dst_size = ukernel_variant.ukernel.interface.get_dst_size(M, N);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.ukernel.interface.run_matmul(
-        M, N, K, bl, imp_packed_lhs.data(), imp_packed_rhs.data(), reinterpret_cast<float*>(imp_dst.data()),
-        N * sizeof(float), sizeof(float), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
+        rect.height(), rect.width(), K, bl, imp_packed_lhs.data() + lhs_matmul_offset,
+        imp_packed_rhs.data() + rhs_matmul_offset, reinterpret_cast<float*>(imp_dst.data() + dst_offset),
+        dst_stride_row, dst_stride_col, std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
 
-    // Compares the output of the micro-kernels against the output of the reference implementation.
-    for (size_t y = 0; y < M; ++y) {
-        for (size_t x = 0; x < N; ++x) {
-            const auto imp_value = read_array<float>(imp_dst.data(), y * N + x);
-            const auto ref_value = read_array<float>(ref_dst.data(), y * N + x);
-            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+    // Compares the output of the micro-kernels against the output of the reference implementation for the portion
+    // tested.
+    for (size_t y = 0; y < rect.height(); ++y) {
+        for (size_t x = 0; x < rect.width(); ++x) {
+            const auto imp_value =
+                read_array<float>(imp_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto ref_value =
+                read_array<float>(ref_dst.data(), (rect.start_row() + y) * N + (x + rect.start_col()));
+            const auto rel_error = ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : imp_value;
 
             if (rel_error > 0.0001F) {
                 ASSERT_EQ(imp_value, ref_value);
@@ -218,14 +282,25 @@ INSTANTIATE_TEST_SUITE_P(
             MatMulShape{16, 32, 64},  //
             MatMulShape{8, 32, 64},   //
             MatMulShape{15, 32, 32},  //
-            MatMulShape{77, 99, 64})),
+            MatMulShape{77, 99, 64}),
+        testing::Values(
+            MatrixPortion(0, 0, 1, 1),     // Full matrix.
+            MatrixPortion(0, 0, 1, 0.25),  // Leftmost portion.
+            MatrixPortion(0, 0.75, 1, 1),  // Rightmost portion.
+            MatrixPortion(0, 0.5, 1, 0.8)  // Somewhere Middle
+            )),
     [](const auto& info) {
         const auto variant_idx = std::get<0>(info.param);
         const std::string name{variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_idx).ukernel.name};
         const auto shape = std::get<MatMulShape>(info.param);
+        const auto portion = std::get<2>(info.param);
 
         std::stringstream sstream;
-        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k;
+        sstream << name << "__M_" << shape.m << "__N_" << shape.n << "__K_" << shape.k   //
+                << "__PortionStartRow_" << static_cast<int>(portion.start_row() * 1000)  //
+                << "__PortionStartCol_" << static_cast<int>(portion.start_col() * 1000)  //
+                << "__PortionHeight_" << static_cast<int>(portion.height() * 1000)       //
+                << "__PortionWidth_" << static_cast<int>(portion.width() * 1000);
         return sstream.str();
     });
 
