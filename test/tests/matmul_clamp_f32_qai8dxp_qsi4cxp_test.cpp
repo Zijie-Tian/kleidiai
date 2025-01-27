@@ -783,12 +783,16 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Combine(
         testing::Range<size_t>(0, variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.size()),
         testing::Values(
-            MatMulShape{16, 32, 64},  //
-            MatMulShape{16, 32, 36},  //
-            MatMulShape{15, 35, 65},  //
-            MatMulShape{8, 32, 64},   //
-            MatMulShape{15, 31, 45},  //
-            MatMulShape{1, 35, 65}),
+            MatMulShape{16, 32, 64},   //
+            MatMulShape{16, 32, 36},   //
+            MatMulShape{15, 35, 65},   //
+            MatMulShape{8, 32, 64},    //
+            MatMulShape{15, 31, 45},   //
+            MatMulShape{1, 35, 65},    //
+            MatMulShape{1, 128, 32},   //
+            MatMulShape{64, 128, 32},  //
+            MatMulShape{1, 225, 55},   //
+            MatMulShape{125, 200, 56}),
         testing::Values(
             MatrixPortion(0, 0, 1, 1),     // Full matrix.
             MatrixPortion(0, 0, 1, 0.25),  // Leftmost portion.

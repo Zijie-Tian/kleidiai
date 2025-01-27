@@ -28,17 +28,18 @@ static const size_t kai_num_bytes_multiplier_lhs = sizeof(float);
 static const size_t kai_num_bytes_multiplier_rhs = sizeof(float);
 static const size_t kai_num_bytes_offset_lhs = sizeof(int32_t);
 static const size_t kai_num_bytes_sum_rhs = sizeof(int32_t);
-static const size_t kai_num_bytes_bias_rhs = sizeof(int32_t);
+static const size_t kai_num_bytes_bias_rhs = sizeof(float);
+static const size_t kai_k_multiple_of = 32;
 
 inline static size_t kai_k_roundedup(size_t k) {
     // Round up k to be a multiple of 32.
-    return kai_roundup(k, 32);
+    return kai_roundup(k, kai_k_multiple_of);
 }
 
 inline static size_t kai_get_lhs_packed_stride(size_t k) {
     const size_t k_internal = kai_k_roundedup(k);
 
-    KAI_ASSERT((k_internal % 32) == 0);
+    KAI_ASSERT((k_internal % kai_k_multiple_of) == 0);
 
     return kai_get_mr_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4vlx4_1x4vl_sme2_sdot() *
         (k_internal * sizeof(int8_t) + kai_num_bytes_multiplier_lhs + kai_num_bytes_offset_lhs);
@@ -47,7 +48,7 @@ inline static size_t kai_get_lhs_packed_stride(size_t k) {
 inline static size_t kai_get_rhs_packed_stride(size_t k) {
     const size_t k_internal = kai_k_roundedup(k);
 
-    KAI_ASSERT((k_internal % 32) == 0);
+    KAI_ASSERT((k_internal % kai_k_multiple_of) == 0);
 
     return kai_get_nr_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4vlx4_1x4vl_sme2_sdot() *
         ((k_internal / 2) + kai_num_bytes_multiplier_rhs + kai_num_bytes_sum_rhs + kai_num_bytes_bias_rhs);

@@ -16,6 +16,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
     - Support compiling the project with the above compilation options enabled.
   - Remove `-Werror` from default build flags as to not cause integration problems
   - Expose the rhs_packed_stride in the header file
+  - Fix validation error when n > nr in kai_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa
 
 ## v1.2.0
 

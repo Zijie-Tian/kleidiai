@@ -84,17 +84,17 @@ size_t kai_get_sr_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(v
 size_t kai_get_lhs_packed_offset_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(size_t m_idx, size_t k) {
     KAI_ASSERT((m_idx % kai_get_m_step_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa()) == 0);
 
-    const size_t k_internal = kai_k_roundedup(k);
+    const size_t mr = kai_get_mr_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa();
 
-    return m_idx * (k_internal + kai_num_bytes_offset_lhs + kai_num_bytes_multiplier_lhs);
+    return (m_idx / mr) * kai_get_lhs_packed_stride(k);
 }
 
 size_t kai_get_rhs_packed_offset_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(size_t n_idx, size_t k) {
     KAI_ASSERT((n_idx % kai_get_n_step_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa()) == 0);
 
-    const size_t k_internal = kai_k_roundedup(k);
+    const size_t nr = kai_get_nr_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa();
 
-    return n_idx * ((k_internal / 2) + kai_num_bytes_sum_rhs + kai_num_bytes_multiplier_rhs + kai_num_bytes_bias_rhs);
+    return (n_idx / nr) * kai_get_rhs_packed_stride(k);
 }
 
 size_t kai_get_dst_offset_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(
@@ -123,8 +123,7 @@ void kai_run_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(
     uint64_t lhs_stride = kai_get_lhs_packed_stride(k);
     uint64_t rhs_stride = kai_get_rhs_packed_stride(k);
     uint64_t m_blk = (uint64_t)kai_k_roundedup(k) * mr;
-    uint64_t n_blk = (uint64_t)kai_k_roundedup(k) * nr;
-    uint64_t dst_inc = mr * n;
+    uint64_t dst_inc = mr * dst_stride_row;
     float scalar_bounds[2] = {scalar_min, scalar_max};
 
     /* ---------------------------------------------------
@@ -254,15 +253,15 @@ void kai_run_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(
 
         // N loop tail
         "   add   x8, x8, %[rhs_stride]                      \n"
-        "   .inst 0x04295089 // ddvl x9, x9, #4              \n"
-        "   addvl x13, x13, #-4 \n"
+        "   .inst 0x04295089 // addvl x9, x9, #4              \n"
+        "   sub x13, x13, %[nr]                              \n"
         "   .inst 0x256d47f0 //whilelt pn8.h, xzr, x13, vlx2 \n"
         "   b.mi  2b                                         \n"
 
         // M loop tail
         "   add   x20, x20, %[lhs_stride]                    \n"
-        "   add   x19, x19, %[dst_inc], lsl #2               \n"
-        "   addvl   x12, x12, #-1                            \n"
+        "   add   x19, x19, %[dst_inc]                       \n"
+        "   sub   x12, x12, %[mr]                            \n"
         "   whilelt p0.s, xzr, x12        \n"
         "   b.mi 1b                                          \n"
 
@@ -270,7 +269,7 @@ void kai_run_matmul_clamp_f32_qai8dxp1vlx8_qsi4cxp4vlx8_1vlx4vl_sme2_mopa(
         "   .inst 0xd503467f //smstop                        \n"
         :
         : [m] "r"(m), [n] "r"(n), [k] "r"(k), [lhs_stride] "r"(lhs_stride), [rhs_stride] "r"(rhs_stride),
-          [dst_stride_row] "r"(dst_stride_row), [lut] "r"(lut), [m_blk] "r"(m_blk), [n_blk] "r"(n_blk),
+          [dst_stride_row] "r"(dst_stride_row), [lut] "r"(lut), [m_blk] "r"(m_blk), [nr] "r"(nr), [mr] "r"(mr),
           [lhs] "r"(lhs_packed), [rhs] "r"(rhs_packed), [dst_inc] "r"(dst_inc), [scalar_bounds] "r"(scalar_bounds),
           [dst] "r"(dst)
         : "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17", "x19", "x20", "p0", "p2", "p8",
