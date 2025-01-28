@@ -169,4 +169,4 @@ KleidiAI offers performance-critical operators for ML, like matrix multiplicatio
 
 <h1> License </h1>
 
-[Apache-2.0](LICENSES/Apache-2.0.txt).
+KleidiAI is distributed under the software licenses in LICENSES directory.
