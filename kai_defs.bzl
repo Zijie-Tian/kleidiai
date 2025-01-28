@@ -32,10 +32,12 @@ def kai_gcc_warn_conlyopts():
     return [
         "-Wmissing-prototypes",
         "-Wstrict-prototypes",
+        "-Wpedantic",
     ]
 
+# GCC/CLANG C++ only warning options
 def kai_gcc_warn_cxxopts():
-    return kai_gcc_warn_copts() + [
+    return [
         "-Wctor-dtor-privacy",
         "-Weffc++",
         "-Woverloaded-virtual",
@@ -45,11 +47,11 @@ def kai_gcc_warn_cxxopts():
 
 # GCC/CLANG compiler options
 def kai_gcc_std_copts():
-    return ["-std=c99", "-Wpedantic"] + kai_gcc_warn_copts()
+    return ["-std=c99"] + kai_gcc_warn_copts() + kai_gcc_warn_conlyopts()
 
 # GCC/CLANG compiler options
 def kai_gcc_std_cxxopts():
-    return ["-std=c++17"] + kai_gcc_warn_cxxopts()
+    return ["-std=c++17"] + kai_gcc_warn_copts() + kai_gcc_warn_cxxopts()
 
 def kai_cpu_select(cpu_uarch):
     if len(cpu_uarch) == 0:
@@ -149,7 +151,6 @@ def _kai_c_cxx_common(name, copts_def_func, **kwargs):
         extra_copts.append("-fno-tree-vectorize")
 
     kwargs["copts"] = kwargs.get("copts", []) + copts_def_func(cpu_uarch) + extra_copts
-    kwargs["conlyopts"] = kai_gcc_warn_conlyopts()
     kwargs["deps"] = ["//:common"] + kwargs.get("deps", [])
     kwargs["linkstatic"] = kwargs.get("linkstatic", True)
 
