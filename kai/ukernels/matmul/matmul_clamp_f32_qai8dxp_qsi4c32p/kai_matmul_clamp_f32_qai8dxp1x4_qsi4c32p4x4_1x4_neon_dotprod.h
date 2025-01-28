@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -61,8 +61,6 @@ size_t kai_get_sr_matmul_clamp_f32_qai8dxp1x4_qsi4c32p4x4_1x4_neon_dotprod(void)
 ///
 /// @param[in] m_idx Row index in the LHS matrix (not packed). It must be 1.
 /// @param[in] k     Total number of columns in the LHS matrix (not packed).
-///                  It must be a multiple of the block length (bl).
-/// @param[in] bl    Block length. It must be a multiple of 32.
 ///
 /// @return the offset in bytes to the packed LHS matrix
 size_t kai_get_lhs_packed_offset_matmul_clamp_f32_qai8dxp1x4_qsi4c32p4x4_1x4_neon_dotprod(

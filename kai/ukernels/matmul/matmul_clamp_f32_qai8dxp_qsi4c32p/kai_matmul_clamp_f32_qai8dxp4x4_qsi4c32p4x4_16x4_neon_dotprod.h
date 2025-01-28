@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -72,6 +72,7 @@ size_t kai_get_lhs_packed_offset_matmul_clamp_f32_qai8dxp4x4_qsi4c32p4x4_16x4_ne
 ///
 /// @param[in] n_idx Col index in the RHS matrix (not packed). It must be a multiple of n_step.
 /// @param[in] k     The common dimension between the LHS and RHS matrix (K).
+///                  It must be a multiple of the block length (bl).
 /// @param[in] bl    Block length. It must be a multiple of 32.
 ///
 /// @return the offset in bytes to the packed RHS matrix
@@ -108,13 +109,14 @@ size_t kai_get_dst_size_matmul_clamp_f32_qai8dxp4x4_qsi4c32p4x4_16x4_neon_dotpro
 /// RHS matrix: Quantized Symmetric Signed 4-bit with per-block (32) quantization (qsi4c32) and packed.
 /// Output tile: (rows x cols) = m_step x n_step.
 ///
-/// Note: Please, refer to the get functions for m_step and n_step for the exact values.
+/// Note: Please refer to the get functions for m_step and n_step for the exact values.
 ///
 /// Features used: dotprod
 ///
 /// @param[in]  m              The number of output rows written.
 /// @param[in]  n              The number of output columns written.
 /// @param[in]  k              The number of channels. The common dimension between the LHS and RHS matrix.
+///                            It must be a multiple of the block length (bl).
 /// @param[in]  bl             Block length. Block length. It must be a multiple of 32.
 /// @param[in]  lhs_packed     The LHS packed matrix. The micro-kernel to pack the native LHS matrix is reported at the
 /// top of this file.

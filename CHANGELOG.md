@@ -11,6 +11,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 ## Upcoming Release
 
 - Update FP16 example to use NHWC input
+- Add MSVC support for kai_matmul_clamp_f32_qai8dxp_qsi4c32p micro-kernels.
 - Fixes:
   - Fix compilation warnings detected by `-Wcast-qual -Wmissing-prototypes -Wstrict-prototypes -Woverlength-strings` compiler options.
     - Support compiling the project with the above compilation options enabled.
