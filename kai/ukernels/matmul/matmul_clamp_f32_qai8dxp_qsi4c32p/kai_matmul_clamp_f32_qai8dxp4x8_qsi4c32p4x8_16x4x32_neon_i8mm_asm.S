@@ -741,8 +741,6 @@ KAI_ASM_LABEL(label_25)  // Row tail: Row loop skip
     ret
     KAI_ASM_FUNCTION_END(kai_kernel_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_16x4x32_neon_i8mm)
 
-    KAI_ASM_END
-
 // Optimized kernel for bl = 32
 
     KAI_ASM_CODE(matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_16x4x32_opt32_neon_i8mm)
