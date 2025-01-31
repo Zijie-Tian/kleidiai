@@ -10,6 +10,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- Added demonstration of integration using CMake in F16 Arm® Neon™ matrix multiplication example.
+
 ## v1.3.0
 
 - Update FP16 example to use NHWC input
