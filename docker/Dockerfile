@@ -90,7 +90,7 @@ RUN wget "https://github.com/bazelbuild/buildtools/releases/download/${BAZEL_BUI
     chmod a+x /usr/bin/buildifier /usr/bin/buildozer /usr/bin/unused_deps
 
 # Android NDK for amd64 only
-ARG NDK_VERSION=r25c
+ARG NDK_VERSION=r27c
 RUN --mount=type=cache,target=${BUILD_CACHE} \
     if [ "${TARGETARCH}" = "amd64" ] ; then \
         wget -cO ${BUILD_CACHE}/android-ndk-${NDK_VERSION}-linux.zip "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" && \
