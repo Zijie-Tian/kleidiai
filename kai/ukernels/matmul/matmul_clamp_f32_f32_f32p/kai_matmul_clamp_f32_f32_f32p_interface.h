@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -37,7 +37,7 @@ struct kai_matmul_clamp_f32_f32_f32p_ukernel {
     kai_matmul_clamp_f32_f32_f32p_get_nr_func_t get_nr;
     kai_matmul_clamp_f32_f32_f32p_get_kr_func_t get_kr;
     kai_matmul_clamp_f32_f32_f32p_get_sr_func_t get_sr;
-    kai_matmul_clamp_f32_f32_f32p_get_lhs_offset_func_t get_lhs_packed_offset;
+    kai_matmul_clamp_f32_f32_f32p_get_lhs_offset_func_t get_lhs_offset;
     kai_matmul_clamp_f32_f32_f32p_get_rhs_packed_offset_func_t get_rhs_packed_offset;
     kai_matmul_clamp_f32_f32_f32p_get_dst_offset_func_t get_dst_offset;
     kai_matmul_clamp_f32_f32_f32p_get_dst_size_func_t get_dst_size;
