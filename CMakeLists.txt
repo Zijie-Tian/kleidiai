@@ -243,7 +243,7 @@ else()
 endif()
 
 target_include_directories(kleidiai
-    PUBLIC  .
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 target_compile_options(kleidiai
