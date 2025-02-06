@@ -309,6 +309,7 @@ if(KLEIDIAI_BUILD_TESTS)
         add_executable(kleidiai_test
             test/tests/bfloat16_test.cpp
             test/tests/float16_test.cpp
+            test/tests/matmul_clamp_f32_qai8dxp_qsi4c32p_test.cpp
         )
     else()
         add_executable(kleidiai_test

@@ -235,8 +235,11 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
     size_t bias_offset = rhs_start_row * sizeof(float);
     size_t scale_offset = rhs_start_row * ref_rhs_scales_stride;
 
-    constexpr kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0_params params{
-        .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
+    kai_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0_params params{};
+    params.lhs_zero_point = 1;
+    params.rhs_zero_point = 8;
+    params.scale_dt = kai_datatype::kai_dt_bf16;
+
     kai_run_rhs_pack_nxk_qsi4c32p_qsu4c32s1s0(
         1, rect.width() /* n */, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data() + rhs_offset, ref_rhs_qsu4_stride,
         reinterpret_cast<const float*>(ref_biases.data() + bias_offset),
@@ -376,8 +379,12 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
     const auto imp_packed_rhs_size =
         kai_get_rhs_packed_size_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(N, K, nr, kr, sr, bl, scale_dt);
     std::vector<uint8_t> imp_packed_rhs(imp_packed_rhs_size);
-    constexpr kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params params{
-        .lhs_zero_point = 1, .rhs_zero_point = 8, .scale_dt = kai_datatype::kai_dt_bf16};
+
+    kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params params{};
+    params.lhs_zero_point = 1;
+    params.rhs_zero_point = 8;
+    params.scale_dt = kai_datatype::kai_dt_bf16;
+
     kai_run_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0(
         1, rect.width() /* n */, K, nr, kr, sr, bl, ref_rhs_qsu4_padded.data() + rhs_offset, ref_rhs_qsu4_stride,
         reinterpret_cast<const float*>(ref_biases.data() + bias_offset), ref_rhs_scales.data() + scale_offset,
@@ -425,10 +432,10 @@ INSTANTIATE_TEST_SUITE_P(
             MatMulShape{1, 25, 64}),
         testing::Values(32, 64),
         testing::Values(
-            MatrixPortion(0, 0, 1, 1),     // Full matrix.
-            MatrixPortion(0, 0, 1, 0.25),  // Leftmost portion.
-            MatrixPortion(0, 0.75, 1, 1),  // Rightmost portion.
-            MatrixPortion(0, 0.5, 1, 0.8)  // Somewhere Middle
+            MatrixPortion(0, 0, 1, 1),       // Full matrix.
+            MatrixPortion(0, 0, 1, 0.25f),   // Leftmost portion.
+            MatrixPortion(0, 0.75f, 1, 1),   // Rightmost portion.
+            MatrixPortion(0, 0.5f, 1, 0.8f)  // Somewhere Middle
             )),
     [](const auto& info) {
         const auto variant_idx = std::get<0>(info.param);
