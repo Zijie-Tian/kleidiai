@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -89,7 +89,7 @@ size_t kai_get_rhs_packed_size_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon(
 /// @param[in]  sr          The number of kr splits. It can be 1 (no splits) up to kr.
 /// @param[in]  rhs         The RHS matrix containing the 4-bit values.
 ///                         Size in bytes is expected to be greater than or equal to n * k * (sizeof(uint8_t) / 2).
-/// @param[in]  bias        The biases.
+/// @param[in]  bias        The biases. The bias is set to 0.f if this argument is NULL.
 /// @param[in]  scale       The scale for each output channel.
 /// @param[out] rhs_packed  The packed RHS matrix.
 /// @param[in]  extra_bytes Extra bytes to append to the end of each row of the packed RHS matrix.

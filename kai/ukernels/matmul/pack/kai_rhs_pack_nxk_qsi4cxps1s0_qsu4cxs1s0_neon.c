@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -97,18 +97,28 @@ void kai_run_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon(
 
         // Copy the scaling factors and bias
         size_t rows_left = n - row_idx;
+        // Saving scales.
         if (rows_left >= nr) {
             memcpy(scaling_factors, &scale[row_idx], nr * kai_num_bytes_multiplier_rhs);
-            memcpy(biases, &bias[row_idx], nr * kai_num_bytes_bias);
         } else {
             // Fill remaining values
             memcpy(scaling_factors, &scale[row_idx], rows_left * kai_num_bytes_multiplier_rhs);
-            memcpy(biases, &bias[row_idx], rows_left * kai_num_bytes_bias);
             // Set leftover to 0
             memset(&scaling_factors[rows_left], 0, (nr - rows_left) * kai_num_bytes_multiplier_rhs);
-            memset(&biases[rows_left], 0, (nr - rows_left) * kai_num_bytes_bias);
         }
-
+        if (bias == NULL) {
+            // Set bias to 0
+            memset(biases, 0, nr * kai_num_bytes_bias);
+        } else {
+            if (rows_left >= nr) {
+                memcpy(biases, &bias[row_idx], nr * kai_num_bytes_bias);
+            } else {
+                // Fill remaining values
+                memcpy(biases, &bias[row_idx], rows_left * kai_num_bytes_bias);
+                // Set leftover to 0
+                memset(&biases[rows_left], 0, (nr - rows_left) * kai_num_bytes_bias);
+            }
+        }
         // Iterate over rows in the nr row block
         for (size_t nr_block_idx = 0; nr_block_idx < nr; ++nr_block_idx) {
             const uint8_t* const src_row = rhs + ((row_idx + nr_block_idx) * rhs_stride);
