@@ -12,7 +12,8 @@
 #include <functional>
 #include <string_view>
 #include <tuple>
-#include <utility>
+
+#include "matrix_portion.hpp"
 
 // clang-format off
 #define UKERNEL_MATMUL_VARIANT(name)          \
@@ -79,6 +80,7 @@ struct MatMulShape {
 
 /// Matrix multiplication test information.
 using MatMulTestParams = std::tuple<size_t, MatMulShape>;
+using MatMulTestPortionedParams = std::tuple<size_t, MatMulShape, MatrixPortion>;
 
 class UkernelVariantTest : public ::testing::TestWithParam<MatMulTestParams> {};
 
