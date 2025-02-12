@@ -13,6 +13,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 - New Advanced SIMD micro-kernels:
   - New 4x8 block size variant of matrix multiplication of QAI8DXP LHS and QSI4C32P RHS with F32 output.
     - Optimizations for FEAT_DotProd.
+  - New 1x8 block size variant of matrix multiplication of QAI8DXP LHS and QSI4C32P RHS with F32 output.
+    - Optimizations for FEAT_DotProd.
 - Added demonstration of integration using CMake in F16 Arm® Neon™ matrix multiplication example.
 - Fixes:
   - Fix the RHS packing micro-kernel kai_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon to handle null bias.
