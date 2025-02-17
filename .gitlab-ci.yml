@@ -274,7 +274,7 @@ test-linux-aarch64:
   - if [ ! -f /opt/devtools/linux-rootfs.img ]; then tar xJf /opt/devtools/linux-rootfs.img.xz; fi
   - >
     echo "#!/bin/bash
-      set -x
+      set -ex
       echo '=================================================='
       echo '== START                                        =='
       echo '=================================================='
@@ -441,7 +441,7 @@ test-linux-aarch64-v8only-fvp:
     - |
       echo -e "#\!/bin/bash -ex" > run_tests.sh
       echo -e "echo \"Perform a positive test where advanced instructions feature detected\"" >> run_tests.sh
-      echo "./build-clang/kleidiai_test --gtest_output=xml:kleidiai-${CI_JOB_NAME_SLUG}.xml --gtest_brief=1" >> run_tests.sh
+      echo "./build-clang/kleidiai_test --gtest_output=xml:kleidiai-${CI_JOB_NAME_SLUG}.xml --gtest_brief=1 || exit 1" >> run_tests.sh
       echo -e "echo \"Perform a negative test with illegal instructions\"" >> run_tests.sh
       for EXAMPLE in `ls -1 build`; do
           echo -e "echo \"Run ${EXAMPLE}\"\n./build/${EXAMPLE} || true" >> run_tests.sh
