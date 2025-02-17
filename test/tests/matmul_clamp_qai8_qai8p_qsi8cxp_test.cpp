@@ -13,7 +13,8 @@
 #include <string>
 #include <tuple>
 
-#include "kai/kai_common.h"
+#include "kai/ukernels/matmul/matmul_clamp_qai8_qai8_qsi8cxp/kai_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot.h"
+#include "kai/ukernels/matmul/matmul_clamp_qai8_qai8_qsi8cxp/kai_matmul_clamp_qai8_qai8_qsi8cxp_interface.h"
 #include "kai/ukernels/matmul/matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa.h"
 #include "kai/ukernels/matmul/pack/kai_lhs_pack_x8p2vlx4_x8_sme.h"
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.h"
@@ -91,7 +92,8 @@ const static RhsPackKernel rhs_pack = {
 
 struct MatMulVariant {
     std::string_view name;  ///< Test identification
-    MatMulShape acc;        ///< Accumulator shape
+    MatMulShape acc_pack;   ///< Accumulator shape for packing (mr/nr/kr)
+    MatMulShape acc_step;   ///< Accumulator shape for matmul (stepping)
 
     std::function<bool(void)> is_supported;  ///< HW support check
 
@@ -103,7 +105,12 @@ struct MatMulVariant {
 const std::array gemm_variants = {
     MatMulVariant{
         .name = "matmul_qai8_qai8p_qsi8cxp",
-        .acc{
+        .acc_pack{
+            .m = 2 * get_sme_vector_length<int32_t>(),
+            .n = 2 * get_sme_vector_length<int32_t>(),
+            .k = sizeof(int32_t) / sizeof(int8_t),
+        },
+        .acc_step{
             .m = 2 * get_sme_vector_length<int32_t>(),
             .n = 2 * get_sme_vector_length<int32_t>(),
             .k = sizeof(int32_t) / sizeof(int8_t),
@@ -136,6 +143,45 @@ const std::array gemm_variants = {
                 .get_dst_size = kai_get_dst_size_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa,
                 .matmul = kai_run_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa,
             },
+    },
+};
+
+const std::array gemv_variants = {
+    MatMulVariant{
+        .name = "matmul_qai8_qai8_qsi8cxp",
+        .acc_pack{
+            .m = 1,
+            .n = 2 * get_sme_vector_length<int32_t>(),
+            .k = sizeof(int32_t) / sizeof(int8_t),
+        },
+        .acc_step{
+            .m = 1,
+            .n = 16 * get_sme_vector_length<int32_t>(),
+            .k = sizeof(int32_t) / sizeof(int8_t),
+        },
+
+        .is_supported = cpu_has_sme2,
+
+        .lhs_pack = std::nullopt,
+        .rhs_pack = rhs_pack,
+        .matmul = MatMulKernel{
+            .get_m_step = kai_get_m_step_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_n_step = kai_get_n_step_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_mr = []() -> size_t { return 1; },
+            .get_nr = kai_get_nr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_kr = kai_get_kr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_sr = kai_get_sr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_packed_lhs_offset = kai_get_lhs_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_packed_rhs_offset = kai_get_rhs_packed_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_dst_offset = kai_get_dst_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .get_dst_size = kai_get_dst_size_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+            .matmul =
+                [](size_t m, size_t n, size_t k, const void* lhs, const void* rhs, void* dst, size_t dst_stride_row,
+                   size_t dst_stride_col, const kai_matmul_requantize32_params* quant_param) {
+                    kai_run_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot(
+                        m, n, k, lhs, sizeof(int8_t), rhs, dst, dst_stride_row, dst_stride_col, quant_param);
+                },
+        },
     },
 };
 
@@ -181,6 +227,21 @@ struct TestReference {
     Buffer packed_rhs;
 };
 
+/// Make sure that interface matches
+static const kai_matmul_clamp_qai8_qai8p_qsi8cxp_ukernel matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot_interface
+    [[maybe_unused]] = {
+        .get_m_step = kai_get_m_step_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_n_step = kai_get_n_step_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_nr = kai_get_nr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_kr = kai_get_kr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_sr = kai_get_sr_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_lhs_offset = kai_get_lhs_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_rhs_packed_offset = kai_get_rhs_packed_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_dst_offset = kai_get_dst_offset_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .get_dst_size = kai_get_dst_size_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+        .run_matmul = kai_run_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot,
+};
+
 /// Generate test reference data
 static TestReference get_test_reference(const MatMulShape& shape, const MatMulVariant& variant) {
     // ============================================================
@@ -196,27 +257,39 @@ static TestReference get_test_reference(const MatMulShape& shape, const MatMulVa
     //   * LHS: 8-bit asymmetric per-matrix quantization.
     //   * RHS: 8-bit symmetric per-channel quantization.
     //   * Bias: 32-bit symmetric per-channel quantization.
+    //
+    //   Treat entire LHS as one row vector, to calculate one single pair of <scale, zero_point>
     auto [lhs_qai8, lhs_qai8_scales, lhs_qai8_zero_points] =
         quantize_asymmetric_per_block_dynamic<float, int8_t, float, int32_t>(
             lhs_f32.data(), 1, shape.m * shape.k, shape.m * shape.k);
     const auto lhs_scale = read_array<float>(lhs_qai8_scales.data(), 0);
     const auto lhs_zero_point = read_array<int32_t>(lhs_qai8_zero_points.data(), 0);
 
+    // Transpose, then quantize symmetrically, then transpose back. This will give one
+    // quantization value for each column
     const auto rhs_f32_t = transpose<float>(rhs_f32.data(), shape.k, shape.n);
     auto [rhs_qsi8_t, rhs_scales] =
         quantize_symmetric_per_block_dynamic<float, int8_t, float>(rhs_f32_t.data(), shape.n, shape.k, shape.k);
     auto rhs_qsi8 = transpose<int8_t>(rhs_qsi8_t.data(), shape.n, shape.k);
 
+    // Multiply all bias values with the LHS scale
     const auto bias_scales = mul<float>(&lhs_scale, 1, 1, rhs_scales.data(), 1, shape.n);
+    // Calculate quantized bias values, by treating bias as column, and
+    // scale using RHS scales. This will scale each bias value indiviually
     auto bias_qsi32 =
         quantize_symmetric_per_block<float, int32_t, float>(bias_f32.data(), bias_scales.data(), shape.n, 1, 1);
 
     // Runs the reference implementation of matmul to produce floating-point result.
     const auto ref_dst_f32 =
         matmul_nt_t_quantized<int8_t, float, int32_t, int8_t, float, int32_t, int32_t, float, int32_t, float>(
-            shape.m, shape.n, shape.k, lhs_qai8.data(), &lhs_scale, &lhs_zero_point, shape.m, shape.k,
-            rhs_qsi8_t.data(), rhs_scales.data(), nullptr, 1, shape.k, bias_qsi32.data(), bias_scales.data(), nullptr,
-            1);
+            shape.m, shape.n, shape.k,                       // matmul shape
+            lhs_qai8.data(), &lhs_scale, &lhs_zero_point,    // LHS, scaling factor and zero point
+            shape.m, shape.k,                                // LHS quantization window shape
+            rhs_qsi8_t.data(), rhs_scales.data(), nullptr,   // RHS scaling factors
+            1, shape.k,                                      // RHS quantization window shape
+            bias_qsi32.data(), bias_scales.data(), nullptr,  // Bias, scaling and zero points
+            1                                                // Bias quantization window shape
+        );
 
     // Computes the output quantization information and clamping limits.
     //
@@ -247,17 +320,20 @@ static TestReference get_test_reference(const MatMulShape& shape, const MatMulVa
     const auto ref_dst_f32_clamped =
         clamp<float>(ref_dst_f32.data(), shape.m * shape.n, ref_dst_f32_clamp_min, ref_dst_f32_clamp_max);
     auto ref_dst_qsi8_clamped = quantize_asymmetric_per_block<float, int8_t, float, int32_t>(
-        ref_dst_f32_clamped.data(), &dst_scale, &dst_zero_point, 1, shape.m * shape.n, shape.m * shape.n);
+        ref_dst_f32_clamped.data(), &dst_scale, &dst_zero_point,  // values, scales, zero point
+        1, shape.m * shape.n,                                     // data shape
+        shape.m * shape.n                                         // quantization window width
+    );
 
     // Runs the reference implementation of the packing functions.
     //
     // The reference packing functions cannot be executed earlier
     // because we need the reference floating-point output first to have
     // the quantization information.
-    auto packed_lhs = reorder_block<int8_t>(lhs_qai8.data(), shape.m, shape.k, variant.acc.m, variant.acc.k);
+    auto packed_lhs = reorder_block<int8_t>(lhs_qai8.data(), shape.m, shape.k, variant.acc_pack.m, variant.acc_pack.k);
     auto packed_rhs = matmul_pack_rhs_nxk_static_quantized<int8_t, float, int32_t>(
         rhs_qsi8_t.data(), rhs_scales.data(), lhs_scale, dst_scale, bias_qsi32.data(), lhs_zero_point, shape.n, shape.k,
-        variant.acc.n, variant.acc.k);
+        variant.acc_pack.n, variant.acc_pack.k);
 
     return {
         .clamp = {.min = dst_qai8_clamp_min, .max = dst_qai8_clamp_max},
@@ -287,20 +363,22 @@ static void test_lhs_pack(
     KAI_ASSUME(variant.lhs_pack.has_value());
 
     const auto imp_packed_lhs_size =
-        variant.lhs_pack->get_packed_lhs_size(shape.m, shape.k, variant.acc.m, variant.acc.k, 1);
+        variant.lhs_pack->get_packed_lhs_size(shape.m, shape.k, variant.acc_pack.m, variant.acc_pack.k, 1);
     ASSERT_EQ(imp_packed_lhs_size, reference.packed_lhs.size());
 
     Buffer imp_packed_lhs(imp_packed_lhs_size);
     const auto imp_lhs_offset = variant.lhs_pack->get_lhs_offset(output_area.start_row(), shape.k * sizeof(int8_t));
-    const auto imp_packed_lhs_offset =
-        variant.lhs_pack->get_packed_lhs_offset(output_area.start_row(), shape.k, variant.acc.m, variant.acc.k, 1);
+    const auto imp_packed_lhs_offset = variant.lhs_pack->get_packed_lhs_offset(
+        output_area.start_row(), shape.k, variant.acc_pack.m, variant.acc_pack.k, 1);
 
     variant.lhs_pack->pack(
-        output_area.height(), shape.k, variant.acc.m, variant.acc.k, 1, 0, reference.lhs_qai8.data() + imp_lhs_offset,
-        shape.k * sizeof(int8_t), imp_packed_lhs.data() + imp_packed_lhs_offset);
+        output_area.height(), shape.k, variant.acc_pack.m, variant.acc_pack.k, 1, 0,
+        reference.lhs_qai8.data() + imp_lhs_offset, shape.k * sizeof(int8_t),
+        imp_packed_lhs.data() + imp_packed_lhs_offset);
 
     const auto imp_packed_lhs_end_offset = output_area.end_row() < shape.m
-        ? variant.lhs_pack->get_packed_lhs_offset(output_area.end_row(), shape.k, variant.acc.m, variant.acc.k, 1)
+        ? variant.lhs_pack->get_packed_lhs_offset(
+              output_area.end_row(), shape.k, variant.acc_pack.m, variant.acc_pack.k, 1)
         : imp_packed_lhs_size;
 
     for (size_t i = 0; i < reference.packed_lhs.size(); ++i) {
@@ -330,7 +408,7 @@ static void test_rhs_pack(
     };
 
     variant.rhs_pack.pack(
-        1, output_area.width(), shape.k, variant.acc.n, variant.acc.k, 1, shape.n * sizeof(int8_t),
+        1, output_area.width(), shape.k, variant.acc_pack.n, variant.acc_pack.k, 1, shape.n * sizeof(int8_t),
         reference.rhs_qsi8.data() + imp_rhs_offset, reference.bias_qsi32.data() + imp_bias_offset,
         reference.rhs_scales.data() + imp_scale_offset, imp_packed_rhs.data() + imp_packed_rhs_offset, 0,
         &imp_pack_rhs_params);
@@ -339,16 +417,22 @@ static void test_rhs_pack(
         ? variant.rhs_pack.get_packed_rhs_offset(output_area.end_col(), shape.k)
         : imp_packed_rhs_size;
 
+    size_t mismatches = 0;
     for (size_t i = 0; i < reference.packed_rhs.size(); ++i) {
         if (i >= imp_packed_rhs_offset && i < imp_packed_rhs_end_offset) {
-            ASSERT_EQ(imp_packed_rhs[i], reference.packed_rhs[i]);
+            if (imp_packed_rhs[i] != reference.packed_rhs[i]) {
+                mismatches += 1;
+            }
         } else {
-            ASSERT_EQ(imp_packed_rhs[i], 0);
+            if (imp_packed_rhs[i] != 0) {
+                mismatches += 1;
+            }
         }
     }
+    ASSERT_EQ(mismatches, 0) << "There are an unexpected amount of mismatches in RHS packing";
 }
 
-/// Test MatMul of GEMM like kernel
+/// Test MatMul of GEMM/GEMV like kernel
 static void test_matmul(
     const MatMulShape& shape, const MatMulVariant& variant, const Rect& output_area, const TestReference& reference) {
     const auto imp_dst_size = variant.matmul.get_dst_size(shape.m, shape.n);
@@ -377,6 +461,7 @@ static void test_matmul(
         reference.packed_rhs.data() + imp_packed_rhs_offset, imp_dst.data() + imp_dst_offset, shape.n * sizeof(int8_t),
         sizeof(int8_t), &imp_main_params);
 
+    size_t mismatches = 0;
     for (size_t y = 0; y < shape.m; ++y) {
         for (size_t x = 0; x < shape.n; ++x) {
             const auto i = y * shape.n + x;
@@ -388,11 +473,10 @@ static void test_matmul(
             const auto error = std::abs(imp_value - ref_value);
             const auto threshold = in_area ? 1 : 0;
 
-            if (error > threshold) {
-                ASSERT_EQ(imp_value, ref_value);
-            }
+            mismatches += static_cast<size_t>(error > threshold);
         }
     }
+    ASSERT_EQ(mismatches, 0) << "There are mismatched between reference result actual result";
 }
 
 using ThisTest = testing::TestWithParam<std::tuple<MatMulVariant, MatMulShape, MatrixPortion>>;
@@ -426,24 +510,26 @@ TEST_P(ThisTest, EndToEnd) {
     const auto imp_kr = variant.matmul.get_kr();
     const auto imp_sr = variant.matmul.get_sr();
 
-    ASSERT_EQ(imp_mr, variant.acc.m);
-    ASSERT_EQ(imp_nr, variant.acc.n);
-    ASSERT_EQ(imp_kr, variant.acc.k);
+    ASSERT_EQ(imp_mr, variant.acc_pack.m);
+    ASSERT_EQ(imp_nr, variant.acc_pack.n);
+    ASSERT_EQ(imp_kr, variant.acc_pack.k);
     ASSERT_EQ(imp_sr, 1);
 
+    // Check that stepping is a multiple of accumulation
     const auto imp_m_step = variant.matmul.get_m_step();
     const auto imp_n_step = variant.matmul.get_n_step();
+    ASSERT_EQ(imp_m_step, variant.acc_step.m);
+    ASSERT_EQ(imp_n_step, variant.acc_step.n);
 
-    ASSERT_EQ(imp_m_step, variant.acc.m);
-    ASSERT_EQ(imp_n_step, variant.acc.n);
-
-    // Test kernels
-    const auto output_area = output_portion.compute_portion(shape.m, shape.n, variant.acc.m, variant.acc.n);
+    // Test kernels. Note that packing and actual stepping might not be the same
+    const auto pack_portion = output_portion.compute_portion(shape.m, shape.n, variant.acc_pack.m, variant.acc_pack.n);
+    const auto matmul_portion =
+        output_portion.compute_portion(shape.m, shape.n, variant.acc_step.m, variant.acc_step.n);
     if (variant.lhs_pack.has_value()) {
-        test_lhs_pack(shape, variant, output_area, reference);
+        test_lhs_pack(shape, variant, pack_portion, reference);
     }
-    test_rhs_pack(shape, variant, output_area, reference);
-    test_matmul(shape, variant, output_area, reference);
+    test_rhs_pack(shape, variant, pack_portion, reference);
+    test_matmul(shape, variant, matmul_portion, reference);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -451,21 +537,23 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Combine(
         testing::ValuesIn(gemm_variants),
         testing::ValuesIn({
-            MatMulShape{1, 1, 1},  //
-            MatMulShape{
-                2 * get_sme_vector_length<int32_t>(), 2 * get_sme_vector_length<int32_t>(),
-                sizeof(int32_t) / sizeof(int8_t)},  //
-            MatMulShape{20, 30, 40},                //
-            MatMulShape{1, 49, 21},                 //
-            MatMulShape{23, 1, 43},                 //
-            MatMulShape{32, 14, 1},                 //
-            MatMulShape{123, 85, 45},               //
-            MatMulShape{130, 130, 6},
+            // clang-format off
+            MatMulShape{  1,   1,  1},
+            MatMulShape{  1,  49, 21},
+            MatMulShape{ 20,  30, 40},
+            MatMulShape{ 23,   1, 43},
+            MatMulShape{ 32,  14,  1},
+            MatMulShape{ 64,  64,  4},
+            MatMulShape{123,  85, 45},
+            MatMulShape{130, 130,  6},
+            // clang-format on
         }),
         testing::ValuesIn({
-            MatrixPortion(0, 0, 1, 1),        // Full matrix.
-            MatrixPortion(0, 0, 0.25, 0.25),  // Top-left corner.
-            MatrixPortion(0.75, 0.75, 1, 1)   // Bottom-right corner.
+            // clang-format off
+            MatrixPortion(   0,    0,    1,    1), // Full matrix.
+            MatrixPortion(   0,    0, 0.25, 0.25), // Top-left corner.
+            MatrixPortion(0.75, 0.75,    1,    1), // Bottom-right corner.
+            // clang-format on
         })),
     [](const auto& info) -> std::string {
         return test_description(
@@ -474,4 +562,37 @@ INSTANTIATE_TEST_SUITE_P(
             std::get<MatrixPortion>(info.param));
     });
 
+INSTANTIATE_TEST_SUITE_P(
+    matmul_clamp_qai8_qai8_qsi8cxp, ThisTest,
+    testing::Combine(
+        testing::ValuesIn(gemv_variants),
+        testing::ValuesIn({
+            // clang-format off
+            MatMulShape{1,    1,    1},
+            MatMulShape{1,   16,    4},
+            MatMulShape{1,   16,   16},
+            MatMulShape{1,   17,    4},
+            MatMulShape{1,   32,   32},
+            MatMulShape{1,   33,  200},
+            MatMulShape{1,   64,    4},
+            MatMulShape{1,   65,    4},
+            MatMulShape{1,  300,   10},
+            MatMulShape{1,  512,    4},
+            MatMulShape{1, 1523,   10},
+            // clang-format on
+        }),
+        testing::ValuesIn({
+            // clang-format off
+            MatrixPortion(0,   0, 1,  1), // Full matrix.
+            MatrixPortion(0,  .5, 1, .5), // Right half
+            MatrixPortion(0,   0, 1, .5), // Left half
+            MatrixPortion(0, .25, 1, .5)  // Middle half
+            // clang-format on
+        })),
+    [](const auto& info) -> std::string {
+        return test_description(
+            std::get<MatMulVariant>(info.param),  //
+            std::get<MatMulShape>(info.param),    //
+            std::get<MatrixPortion>(info.param));
+    });
 }  // namespace kai::test
