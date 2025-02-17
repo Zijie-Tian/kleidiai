@@ -15,6 +15,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
     - Optimizations for FEAT_DotProd.
   - New 1x8 block size variant of matrix multiplication of QAI8DXP LHS and QSI4C32P RHS with F32 output.
     - Optimizations for FEAT_DotProd.
+  - New 1x8 block size variant of matrix multiplication of QAI8DXP 1x8 LHS and QSI4C32P 8x8 RHS with F32 output.
+    - Optimizations for FEAT_DotProd.
 - New SME2 micro-kernels:
   - Matrix multiplication (1xN) of QAI8 LHS and QSI8 RHS to produce QAI8 output.
 - Added demonstration of integration using CMake in F16 Arm® Neon™ matrix multiplication example.
