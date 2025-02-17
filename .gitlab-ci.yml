@@ -419,8 +419,7 @@ test-linux-aarch64-v8only-fvp:
   stage: test
   needs:
     - build-clang
-  variables:
-    FVP_TEST_EXECUTABLE: "./build-clang/kleidiai_test --gtest_output=xml:kleidiai-${CI_JOB_NAME_SLUG}.xml --gtest_brief=1"
+    - build-examples
   script:
     - >
       FVP_MODEL_EXTRA="
@@ -439,10 +438,22 @@ test-linux-aarch64-v8only-fvp:
         -C cluster0.has_arm_v9-4=0
         -C cluster0.has_arm_v9-5=0
         -C cluster0.has_sve=0"
+    - |
+      echo -e "#\!/bin/bash -ex" > run_tests.sh
+      echo -e "echo \"Perform a positive test where advanced instructions feature detected\"" >> run_tests.sh
+      echo "./build-clang/kleidiai_test --gtest_output=xml:kleidiai-${CI_JOB_NAME_SLUG}.xml --gtest_brief=1" >> run_tests.sh
+      echo -e "echo \"Perform a negative test with illegal instructions\"" >> run_tests.sh
+      for EXAMPLE in `ls -1 build`; do
+          echo -e "echo \"Run ${EXAMPLE}\"\n./build/${EXAMPLE} || true" >> run_tests.sh
+      done
+      chmod a+x run_tests.sh
+    - FVP_TEST_EXECUTABLE="./run_tests.sh"
     - *test-linux-fvp
     # Verify that no extra features enabled and CPU variant is v8.0
     - "grep -qE 'Features\\s+: fp asimd evtstrm cpuid' output.txt"
     - "grep -qE 'CPU variant\\s+: 0' output.txt"
+    # Verify that all examples crashed with Illegal instruction
+    - test $(grep -cE 'Illegal instruction\s+./build/' output.txt) -eq $(ls -1 build | wc -l | tr -d ' ')
   artifacts:
     expire_in: 1 day
     paths:
