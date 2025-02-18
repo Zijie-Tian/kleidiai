@@ -10,7 +10,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
-## 1.4.0
+## v1.4.0
 
 - New Advanced SIMD micro-kernels:
   - New 4x8 block size variant of matrix multiplication of QAI8DXP LHS and QSI4C32P RHS with F32 output.
