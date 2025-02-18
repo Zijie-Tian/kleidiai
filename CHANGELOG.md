@@ -19,9 +19,12 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
     - Optimizations for FEAT_DotProd.
 - New SME2 micro-kernels:
   - Matrix multiplication (1xN) of QAI8 LHS and QSI8 RHS to produce QAI8 output.
-- Added demonstration of integration using CMake in F16 Arm® Neon™ matrix multiplication example.
+- Updated an example to demonstrate integration using CMake
+- Build tests for matmul_clamp_f32_qai8dxp_qsi4c32p with MSVC
 - Fixes:
   - Fix the RHS packing micro-kernel kai_rhs_pack_nxk_qsi4cxps1s0_qsu4cxs1s0_neon to handle null bias.
+  - Implement matmul portion testing in int8 unit tests
+  - Use absolute path as header search path in CMakeLists.txt
 
 ## v1.3.0
 
