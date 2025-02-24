@@ -338,7 +338,6 @@ if(KLEIDIAI_BUILD_TESTS)
         PRIVATE GTest::gtest_main
     )
 
-
     # Cross-compiling is a common use case which creates a conflict if DISCOVERY_MODE is set to POST_BUILD (by default)
     # since the host platform does not match the target. Setting the mode to PRE_TEST avoids this conflict. This feature
     # was added in CMake 3.18
@@ -363,16 +362,13 @@ if(KLEIDIAI_BUILD_BENCHMARK)
 
     add_executable(kleidiai_benchmark
         benchmark/main.cpp
-        benchmark/matmul/matmul_f32_f32p_f32p.cpp
-        benchmark/matmul/matmul_f32.cpp
-        test/common/cpu_info.cpp)
+        benchmark/matmul/matmul_registry.cpp
+    )
 
-    target_link_libraries(
-        kleidiai_benchmark
-        kleidiai
-        benchmark::benchmark)
-
-    set(KLEIDIAI_BENCHMARK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-    target_include_directories(kleidiai_benchmark
-        PRIVATE KLEIDIAI_BENCHMARK_INCLUDE_DIR)
+    target_link_libraries(kleidiai_benchmark
+        PRIVATE
+            kleidiai
+            kleidiai_test_framework
+            benchmark::benchmark
+    )
 endif()

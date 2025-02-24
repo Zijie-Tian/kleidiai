@@ -1,40 +1,63 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <benchmark/benchmark.h>
 #include <unistd.h>
 
-#include <cstdint>
-#include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <sstream>
 
-#include "benchmark/matmul/matmul_f32.hpp"
-#include "benchmark/matmul/matmul_f32_f32p_f32p.hpp"
+#include "benchmark/matmul/matmul_registry.hpp"
+#include "kai/kai_common.h"
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#endif  // __GNUC__
+
+#include <benchmark/benchmark.h>
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif  // __GNUC__
+
+namespace {
 void print_usage(char* name) {
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "%s -m 13 -n 17 -k 18\n", name);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "For additional options:\n");
-    fprintf(stderr, "%s --help\n", name);
+    std::ostringstream oss;
+    oss << "Usage:\n";
+    oss << "\t" << name << " -m 13 -n 17 -k 18 -b 32\n";
+    oss << "Options:\n";
+    oss << "\t-m,-n,-k";
+    oss << "\tMatrix dimensions\n";
+    oss << "\t-b";
+    oss << "\t\t\t(Optional) Block size for blockwise quantization\n";
+    oss << "For additional options:\n";
+    oss << "\t--help\n";
+    std::cerr << oss.str() << "\n";
 }
+}  // namespace
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
 
+    std::ostringstream oss;
+    oss << "KleidiAI version: v" << kai_get_version() << "\n";
+
     bool mflag = false;
     bool nflag = false;
     bool kflag = false;
+    bool bflag = false;
 
-    size_t m = 0;
-    size_t n = 0;
-    size_t k = 0;
+    size_t m = 1;
+    size_t n = 1;
+    size_t k = 1;
+    size_t bl = 32;
 
     int opt;
-    while ((opt = getopt(argc, argv, "m:n:k:")) != -1) {
+    while ((opt = getopt(argc, argv, "m:n:k:b:")) != -1) {
         switch (opt) {
             case 'm':
                 m = atoi(optarg);
@@ -47,6 +70,10 @@ int main(int argc, char** argv) {
             case 'k':
                 k = atoi(optarg);
                 kflag = true;
+                break;
+            case 'b':
+                bl = atoi(optarg);
+                bflag = true;
                 break;
             case '?':
                 // Fallthrough
@@ -61,9 +88,12 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    kai::bench::matmul_f32_qa8dxp_qs4cxp::dotprod::RegisterBenchmarks(m, n, k);
-    kai::bench::matmul_f32_qa8dxp_qs4cxp::i8mm::RegisterBenchmarks(m, n, k);
-    kai::bench::matmul_f32_f32p_f32p::RegisterBenchmarks(m, n, k);
+    if (!bflag) {
+        oss << "Optional argument -b not specified. Defaulting to block size " << bl << "\n";
+    }
+    std::cerr << oss.str();
+
+    kai::benchmark::RegisterMatMulBenchmarks({m, n, k}, bl);
 
     ::benchmark::RunSpecifiedBenchmarks();
     ::benchmark::Shutdown();

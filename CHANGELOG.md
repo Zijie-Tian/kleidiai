@@ -10,6 +10,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- Extend benchmark tool to support all matrix multiplication micro-kernels.
+
 ## v1.4.0
 
 - New Advanced SIMD micro-kernels:
