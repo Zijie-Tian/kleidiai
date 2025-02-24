@@ -60,7 +60,6 @@ else()
 
     set(KLEIDIAI_WARNING_FLAGS_CXX
         "-Wctor-dtor-privacy"
-        "-Weffc++"
         "-Woverloaded-virtual"
         "-Wsign-promo"
         "-Wmissing-declarations"
