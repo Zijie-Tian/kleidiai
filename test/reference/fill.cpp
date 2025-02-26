@@ -44,7 +44,7 @@ std::vector<uint8_t> fill_matrix_raw(size_t height, size_t width, std::function<
 }
 
 template <typename T>
-std::vector<uint8_t> fill_matrix_random_raw(size_t height, size_t width, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random_raw(size_t height, size_t width, uint32_t seed) {
     using TDist = std::conditional_t<
         std::is_floating_point_v<T>, std::uniform_real_distribution<float>, std::uniform_int_distribution<T>>;
 
@@ -55,7 +55,7 @@ std::vector<uint8_t> fill_matrix_random_raw(size_t height, size_t width, uint64_
 }
 
 template <>
-std::vector<uint8_t> fill_matrix_random_raw<Float16>(size_t height, size_t width, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random_raw<Float16>(size_t height, size_t width, uint32_t seed) {
     std::mt19937 rnd(seed);
     std::uniform_real_distribution<float> dist;
 
@@ -63,7 +63,7 @@ std::vector<uint8_t> fill_matrix_random_raw<Float16>(size_t height, size_t width
 }
 
 template <>
-std::vector<uint8_t> fill_matrix_random_raw<BFloat16>(size_t height, size_t width, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random_raw<BFloat16>(size_t height, size_t width, uint32_t seed) {
     std::mt19937 rnd(seed);
     std::uniform_real_distribution<float> dist;
 
@@ -71,7 +71,7 @@ std::vector<uint8_t> fill_matrix_random_raw<BFloat16>(size_t height, size_t widt
 }
 
 template <>
-std::vector<uint8_t> fill_matrix_random_raw<Int4>(size_t height, size_t width, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random_raw<Int4>(size_t height, size_t width, uint32_t seed) {
     std::mt19937 rnd(seed);
     std::uniform_int_distribution<int16_t> dist(-8, 7);
 
@@ -79,7 +79,7 @@ std::vector<uint8_t> fill_matrix_random_raw<Int4>(size_t height, size_t width, u
 }
 
 template <>
-std::vector<uint8_t> fill_matrix_random_raw<UInt4>(size_t height, size_t width, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random_raw<UInt4>(size_t height, size_t width, uint32_t seed) {
     std::mt19937 rnd(seed);
     std::uniform_int_distribution<int16_t> dist(0, 15);
 
@@ -88,7 +88,7 @@ std::vector<uint8_t> fill_matrix_random_raw<UInt4>(size_t height, size_t width, 
 
 }  // namespace
 
-std::vector<uint8_t> fill_matrix_random(size_t height, size_t width, const DataFormat& format, uint64_t seed) {
+std::vector<uint8_t> fill_matrix_random(size_t height, size_t width, const DataFormat& format, uint32_t seed) {
     switch (format.pack_format()) {
         case DataFormat::PackFormat::NONE:
             switch (format.data_type()) {
@@ -119,10 +119,10 @@ std::vector<uint8_t> fill_matrix_random(size_t height, size_t width, const DataF
 }
 
 template <typename Value>
-std::vector<uint8_t> fill_random(size_t length, uint64_t seed) {
+std::vector<uint8_t> fill_random(size_t length, uint32_t seed) {
     return fill_matrix_random_raw<Value>(1, length, seed);
 }
 
-template std::vector<uint8_t> fill_random<float>(size_t length, uint64_t seed);
+template std::vector<uint8_t> fill_random<float>(size_t length, uint32_t seed);
 
 }  // namespace kai::test

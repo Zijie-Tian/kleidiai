@@ -71,7 +71,7 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
         GTEST_SKIP();
     }
 
-    constexpr uint64_t seed = 0;
+    constexpr uint32_t seed = 0;
 
     const size_t m = matmul_shape.m;
     const size_t n = matmul_shape.n;

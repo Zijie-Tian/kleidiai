@@ -162,7 +162,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_nxk) {
         GTEST_SKIP();
     }
 
-    constexpr uint64_t seed = 0;
+    constexpr uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;
@@ -296,7 +296,7 @@ TEST_P(MatMulTest_f32_qmatmul_clamp_f32_qai8dxp_qsi4c32p, EndToEnd_RHS_kxn) {
         GTEST_SKIP();
     }
 
-    const uint64_t seed = 0;
+    const uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;

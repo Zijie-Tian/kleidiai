@@ -280,7 +280,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
         GTEST_SKIP() << "Signed integer input unsupported";
     }
 
-    const uint64_t seed = 0;
+    const uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;
@@ -404,7 +404,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
         GTEST_SKIP();  // Wrong type. This test for NxK
     }
 
-    const uint64_t seed = 0;
+    const uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;
@@ -531,7 +531,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
         GTEST_SKIP() << "Signed integer input unsupported";
     }
 
-    const uint64_t seed = 0;
+    const uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;
@@ -659,7 +659,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
         GTEST_SKIP();  // Wrong type. This test for KxN
     }
 
-    const uint64_t seed = 0;
+    const uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;

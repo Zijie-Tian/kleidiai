@@ -167,7 +167,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
         GTEST_SKIP();
     }
 
-    const std::uint64_t seed = 0;
+    const std::uint32_t seed = 0;
 
     const size_t M = matmul_shape.m;
     const size_t N = matmul_shape.n;

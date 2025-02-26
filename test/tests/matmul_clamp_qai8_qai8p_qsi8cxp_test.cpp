@@ -185,7 +185,7 @@ const std::array gemv_variants = {
     },
 };
 
-constexpr uint64_t seed = 0;               ///< Random seed used for tests
+constexpr uint32_t seed = 0;               ///< Random seed used for tests
 constexpr float output_clamp_rate = 0.1F;  ///< Clamping range in ration of output
 
 /// Value range
