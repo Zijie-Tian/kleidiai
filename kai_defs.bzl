@@ -39,7 +39,6 @@ def kai_gcc_warn_conlyopts():
 def kai_gcc_warn_cxxopts():
     return [
         "-Wctor-dtor-privacy",
-        "-Weffc++",
         "-Woverloaded-virtual",
         "-Wsign-promo",
         "-Wmissing-declarations",
