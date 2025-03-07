@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -456,11 +456,11 @@ TEST_P(MatMulTest, PackedLhs) {
     const auto& [method, info, portion] = GetParam();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     if (!method.is_pack_lhs_needed()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Test not valid w/o LHS pack";
     }
 
     const auto& data = test_data();
@@ -472,7 +472,7 @@ TEST_P(MatMulTest, PackedLhs) {
         lhs_w);  // LHS packing micro-kernel API doesn't support scheduling over K dimension.
 
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto mr = method.fn_get_mr();
@@ -509,11 +509,11 @@ TEST_P(MatMulTest, PackedRhs) {
     const auto& [method, info, portion] = GetParam();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     if (!method.is_pack_rhs_needed()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Test not valid w/o RHS pack";
     }
 
     const auto& data = test_data();
@@ -526,7 +526,7 @@ TEST_P(MatMulTest, PackedRhs) {
     const Rect rect = portion.compute_portion(rhs_full_width, rhs_full_height, block_height, block_width);
 
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto rhs_start_row = rect.start_row();
@@ -581,11 +581,11 @@ TEST_P(MatMulTest, PackedTransposedRhs) {
     const auto& [method, info, portion] = GetParam();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     if (!method.is_pack_rhs_nxk_needed()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Test not valid w/o pre-processing of transposed RHS matrix";
     }
 
     const auto& data = test_data();
@@ -598,7 +598,7 @@ TEST_P(MatMulTest, PackedTransposedRhs) {
         method.packed_rhs_format.scheduler_block_width(info.k));
 
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto ref_rhs_row_stride = method.rhs_format.default_row_stride(info.k);
@@ -643,11 +643,11 @@ TEST_P(MatMulTest, Output) {
     const auto& [method, info, portion] = GetParam();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     if (!method.has_main_kernel()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "No main kernel available";
     }
 
     const auto& data = test_data();
@@ -660,7 +660,7 @@ TEST_P(MatMulTest, Output) {
     const auto rect = portion.compute_portion(info.m, info.n, method.m0, method.n0);
 
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_w = info.k;

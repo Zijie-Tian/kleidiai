@@ -497,11 +497,11 @@ TEST_P(MatMulTestBf16, Output) {
     const auto& [method, info, portion] = GetParam();
 
     if (method.fn_is_supported && !method.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     if (!method.has_main_kernel()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "No main kernel available";
     }
 
     const auto& data = test_data();
@@ -514,7 +514,7 @@ TEST_P(MatMulTestBf16, Output) {
     const auto rect = portion.compute_portion(info.m, info.n, m_step, n_step);
 
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const size_t lhs_w = info.k;

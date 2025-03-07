@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -68,7 +68,7 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     const auto& ukernel_variant = ukernel_variants.at(variant_idx);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     constexpr uint32_t seed = 0;

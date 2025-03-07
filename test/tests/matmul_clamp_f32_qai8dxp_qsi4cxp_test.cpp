@@ -210,7 +210,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, Offset_RHS) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     const size_t M = matmul_shape.m;
@@ -222,7 +222,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, Offset_RHS) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto nr = ukernel_variant.interface.get_nr();
@@ -240,7 +240,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, Offset_LHS) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     const size_t M = matmul_shape.m;
@@ -252,7 +252,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, Offset_LHS) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto mr = ukernel_variant.interface.get_mr();
@@ -271,10 +271,10 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
     if (ukernel_variant.rhs_pack_type == RhsPackType::KxN) {
-        GTEST_SKIP();  // Wrong type. This test for NxK
+        GTEST_SKIP() << "Wrong type. This test for NxK";
     }
     if (!ukernel_variant.signed_integer_support) {
         GTEST_SKIP() << "Signed integer input unsupported";
@@ -318,7 +318,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsi4cx) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_start_row = rect.start_row();
@@ -398,10 +398,10 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
     if (ukernel_variant.rhs_pack_type == RhsPackType::KxN) {
-        GTEST_SKIP();  // Wrong type. This test for NxK
+        GTEST_SKIP() << "Wrong type. This test for NxK";
     }
 
     const uint32_t seed = 0;
@@ -442,7 +442,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_nxk_qsu4cx) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_start_row = rect.start_row();
@@ -522,10 +522,10 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
     if (ukernel_variant.rhs_pack_type == RhsPackType::NxK) {
-        GTEST_SKIP();  // Wrong type. This test for KxN
+        GTEST_SKIP() << "Wrong type. This test for KxN";
     }
     if (!ukernel_variant.signed_integer_support) {
         GTEST_SKIP() << "Signed integer input unsupported";
@@ -580,7 +580,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsi4cx) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_start_row = rect.start_row();
@@ -653,10 +653,10 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qai8dxp_qsi4cxp.at(variant_index);
 
     if (ukernel_variant.fn_is_supported && !ukernel_variant.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
     if (ukernel_variant.rhs_pack_type == RhsPackType::NxK) {
-        GTEST_SKIP();  // Wrong type. This test for KxN
+        GTEST_SKIP() << "Wrong type. This test for KxN";
     }
 
     const uint32_t seed = 0;
@@ -709,7 +709,7 @@ TEST_P(MatMulTest_f32_qai8dxp_qsi4cxp, EndToEnd_RHS_kxn_qsu4cx) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_start_row = rect.start_row();

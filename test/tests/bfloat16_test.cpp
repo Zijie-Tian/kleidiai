@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -14,7 +14,7 @@ namespace kai::test {
 
 TEST(BFloat16, SimpleTest) {
     if (!cpu_has_bf16()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "No CPU support for BFloat16";
     }
 
     ASSERT_EQ(static_cast<float>(BFloat16()), 0.0F);

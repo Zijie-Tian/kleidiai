@@ -102,7 +102,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_RHS) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     const size_t bl = 32;
@@ -118,7 +118,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_RHS) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP() << "Test Portion size is 0!";
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto rhs_start_row = rect.start_col();
@@ -132,7 +132,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_LHS) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     const size_t bl = 32;
@@ -149,7 +149,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, Offset_LHS) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP() << "Test Portion size is 0!";
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
 
     const auto lhs_start_row = rect.start_row();
@@ -164,7 +164,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
     const auto& ukernel_variant = variants_kai_matmul_clamp_f32_qsi8d32p_qsi4c32p.at(variant_index);
 
     if (ukernel_variant.ukernel.fn_is_supported && !ukernel_variant.ukernel.fn_is_supported()) {
-        GTEST_SKIP();
+        GTEST_SKIP() << "CPU features are not supported by current CPU";
     }
 
     const std::uint32_t seed = 0;
@@ -191,7 +191,7 @@ TEST_P(MatMulTest_f32_qsi8d32p_qsi4c32p, EndToEnd) {
 
     const auto rect = portion.compute_portion(M, N, m_step, n_step);
     if (rect.height() == 0 || rect.width() == 0) {
-        GTEST_SKIP() << "Test Portion size is 0!";
+        GTEST_SKIP() << "Empty dimension of matrix(" << rect.width() << "," << rect.height() << ")";
     }
     // Generates input data.
     const auto ref_lhs = fill_random<float>(M * K, seed + 0);
