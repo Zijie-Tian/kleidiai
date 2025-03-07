@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -189,24 +189,25 @@ template <
     typename LhsData, typename LhsScale, typename LhsZeroPoint, typename RhsData, typename RhsScale,
     typename RhsZeroPoint, typename BiasData, typename BiasScale, typename BiasZeroPoint, typename DstData>
 std::vector<uint8_t> matmul_nt_t_quantized(
-    size_t m, size_t n, size_t k,  //
-    const void* lhs_data, const void* lhs_scales, const void* lhs_zero_points, size_t lhs_quant_height,
-    size_t lhs_quant_width,  //
-    const void* rhs_data, const void* rhs_scales, const void* rhs_zero_points, size_t rhs_quant_height,
-    size_t rhs_quant_width,  //
-    const void* bias_data, const void* bias_scales, const void* bias_zero_points, size_t bias_quant_width) {
+    size_t m, size_t n, size_t k,                                                  //
+    const void* lhs_data, const void* lhs_scales, const void* lhs_zero_points,     //
+    size_t lhs_quant_height, size_t lhs_quant_width,                               //
+    const void* rhs_data, const void* rhs_scales, const void* rhs_zero_points,     //
+    size_t rhs_quant_height, size_t rhs_quant_width,                               //
+    const void* bias_data, const void* bias_scales, const void* bias_zero_points,  //
+    size_t bias_quant_width) {
     const auto lhs_num_quant_per_row = round_up_division(k, lhs_quant_width);
     const auto rhs_num_quant_per_row = round_up_division(k, rhs_quant_width);
 
     std::vector<uint8_t> dst(m * n * sizeof(DstData));
 
-    for (size_t y = 0; y < m; ++y) {
-        for (size_t x = 0; x < n; ++x) {
+    for (size_t row = 0; row < m; ++row) {
+        for (size_t col = 0; col < n; ++col) {
             DstData acc = 0;
 
             for (size_t i = 0; i < k; ++i) {
-                const auto lhs_data_index = y * k + i;
-                const auto lhs_quant_index = y / lhs_quant_height * lhs_num_quant_per_row + i / lhs_quant_width;
+                const auto lhs_data_index = row * k + i;
+                const auto lhs_quant_index = row / lhs_quant_height * lhs_num_quant_per_row + i / lhs_quant_width;
                 const auto lhs_value = read_array<LhsData>(lhs_data, lhs_data_index);
                 const auto lhs_scale = lhs_scales != nullptr ? read_array<LhsScale>(lhs_scales, lhs_quant_index)
                                                              : static_cast<LhsScale>(1);
@@ -214,8 +215,8 @@ std::vector<uint8_t> matmul_nt_t_quantized(
                     ? read_array<LhsZeroPoint>(lhs_zero_points, lhs_quant_index)
                     : static_cast<LhsZeroPoint>(0);
 
-                const auto rhs_data_index = x * k + i;
-                const auto rhs_quant_index = x / rhs_quant_height * rhs_num_quant_per_row + i / rhs_quant_width;
+                const auto rhs_data_index = col * k + i;
+                const auto rhs_quant_index = col / rhs_quant_height * rhs_num_quant_per_row + i / rhs_quant_width;
                 const auto rhs_value = read_array<RhsData>(rhs_data, rhs_data_index);
                 const auto rhs_scale = rhs_scales != nullptr ? read_array<RhsScale>(rhs_scales, rhs_quant_index)
                                                              : static_cast<RhsScale>(1);
@@ -230,19 +231,19 @@ std::vector<uint8_t> matmul_nt_t_quantized(
             }
 
             if (bias_data != nullptr) {
-                const auto bias_value = read_array<BiasData>(bias_data, x);
+                const auto bias_value = read_array<BiasData>(bias_data, col);
                 const auto bias_scale = bias_scales != nullptr
-                    ? read_array<BiasScale>(bias_scales, x / bias_quant_width)
+                    ? read_array<BiasScale>(bias_scales, col / bias_quant_width)
                     : static_cast<BiasScale>(1);
                 const auto bias_zero_point = bias_zero_points != nullptr
-                    ? read_array<BiasZeroPoint>(bias_zero_points, x / bias_quant_width)
+                    ? read_array<BiasZeroPoint>(bias_zero_points, col / bias_quant_width)
                     : static_cast<BiasZeroPoint>(0);
 
                 acc += (static_cast<DstData>(bias_value) - static_cast<DstData>(bias_zero_point)) *
                     static_cast<DstData>(bias_scale);
             }
 
-            write_array<DstData>(dst.data(), y * n + x, acc);
+            write_array<DstData>(dst.data(), row * n + col, acc);
         }
     }
 

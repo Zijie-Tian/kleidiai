@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -72,9 +72,8 @@ std::vector<uint8_t> binary_elementwise_any_op_type(
     const auto height = std::max(lhs_height, rhs_height);
     const auto width = std::max(lhs_width, rhs_width);
 
-    std::vector<uint8_t> dst;
-    dst.resize(height * width * size_in_bits<T> / 8);
     KAI_ASSUME(width * size_in_bits<T> % 8 == 0);
+    std::vector<uint8_t> dst(height * width * size_in_bits<T> / 8);
 
     for (size_t y = 0; y < height; ++y) {
         for (size_t x = 0; x < width; ++x) {

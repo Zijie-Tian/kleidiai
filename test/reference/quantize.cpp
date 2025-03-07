@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -266,10 +266,12 @@ std::vector<uint8_t> quantize_asymmetric_per_block(
 template <typename SrcType, typename DstType, typename ScaleType, typename ZeroPointType>
 std::tuple<std::vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>> quantize_asymmetric_per_block_dynamic(
     const void* src, size_t height, size_t width, size_t quant_width) {
+    /* Calculate the asymmetric quantization information, one scaling per row  */
     auto [scales_src_type, zero_points] =
         compute_asymmetric_per_block_quantization_info<SrcType, DstType, SrcType, ZeroPointType>(
             src, height, width, quant_width);
 
+    /* Do the actual quantization */
     auto data = quantize_asymmetric_per_block<SrcType, DstType, SrcType, ZeroPointType>(
         src, scales_src_type.data(), zero_points.data(), height, width, quant_width);
 
