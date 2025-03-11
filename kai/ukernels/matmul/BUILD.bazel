@@ -28,7 +28,6 @@ SCALAR_KERNELS = [
 
 # buildifier: keep sorted
 NEON_KERNELS = [
-    "matmul_clamp_f32_f32_f32p/kai_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla",
     "pack/kai_lhs_quant_pack_qsi8d32p_f32_neon",
     "pack/kai_rhs_pack_kxn_f32p8x1biasf32_f32_f32_neon",
     "pack/kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0",
@@ -40,6 +39,7 @@ NEON_KERNELS = [
     "pack/kai_rhs_pack_nxk_qsi8cxp_qsi8cx_neon",
 ]
 
+# buildifier: keep sorted
 NEON_KERNELS_ASM = [
     "matmul_clamp_f32_f32_f32p/kai_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla",
 ]
@@ -69,13 +69,6 @@ FP16_BF16_KERNELS = [
 
 # buildifier: keep sorted
 DOTPROD_KERNELS = [
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x4_qsi4c32p4x4_1x4_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x4_qsi4c32p8x4_1x8_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x8_qsi4c32p4x8_1x4x32_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x8_qsi4c32p8x8_1x8x32_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x4_qsi4c32p4x4_16x4_neon_dotprod",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x4_qsi4c32p8x4_4x8_neon_dotprod",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp1x4_qsi4cxp4x4_1x4_neon_dotprod",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp4x8_1x4x32_neon_dotprod",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp1x8_qsi4cxp8x8_1x8x32_neon_dotprod",
@@ -89,6 +82,7 @@ DOTPROD_KERNELS = [
     "matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p4x4_qsi4c32p4x4_16x4_neon_dotprod",
 ]
 
+# buildifier: keep sorted
 DOTPROD_KERNELS_ASM = [
     "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x4_qsi4c32p4x4_1x4_neon_dotprod",
     "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp1x4_qsi4c32p8x4_1x8_neon_dotprod",
@@ -101,10 +95,6 @@ DOTPROD_KERNELS_ASM = [
 
 # buildifier: keep sorted
 I8MM_KERNELS = [
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_16x4x32_neon_i8mm",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_8x4x32_neon_i8mm",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p8x8_4x8_neon_i8mm",
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p8x8_4x8x32_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_4x4x32_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp4x8_8x4x32_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4cxp/kai_matmul_clamp_f32_qai8dxp4x8_qsi4cxp8x8_4x8x32_neon_i8mm",
@@ -114,9 +104,10 @@ I8MM_KERNELS = [
     "matmul_clamp_f32_qsi8d32p_qsi4c32p/kai_matmul_clamp_f32_qsi8d32p4x8_qsi4c32p4x8_8x4x32_neon_i8mm",
 ]
 
+# buildifier: keep sorted
 I8MM_KERNELS_ASM = [
-    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_8x4x32_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_16x4x32_neon_i8mm",
+    "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p4x8_8x4x32_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p8x8_4x8_neon_i8mm",
     "matmul_clamp_f32_qai8dxp_qsi4c32p/kai_matmul_clamp_f32_qai8dxp4x8_qsi4c32p8x8_4x8x32_neon_i8mm",
 ]
@@ -173,8 +164,9 @@ kai_c_library(
 
 kai_c_library(
     name = "neon_impl_asm",
-    srcs = [ukernel + "_asm.S" for ukernel in NEON_KERNELS_ASM],
+    srcs = [ukernel + "_asm.S" for ukernel in NEON_KERNELS_ASM] + [ukernel + ".c" for ukernel in NEON_KERNELS_ASM],
     cpu_uarch = kai_cpu_neon(),
+    textual_hdrs = [ukernel + ".h" for ukernel in NEON_KERNELS_ASM],
 )
 
 kai_c_library(
@@ -207,8 +199,9 @@ kai_c_library(
 
 kai_c_library(
     name = "dotprod_impl_asm",
-    srcs = [ukernel + "_asm.S" for ukernel in DOTPROD_KERNELS_ASM],
+    srcs = [ukernel + "_asm.S" for ukernel in DOTPROD_KERNELS_ASM] + [ukernel + ".c" for ukernel in DOTPROD_KERNELS_ASM],
     cpu_uarch = kai_cpu_dotprod(),
+    textual_hdrs = [ukernel + ".h" for ukernel in DOTPROD_KERNELS_ASM],
 )
 
 kai_c_library(
@@ -220,8 +213,9 @@ kai_c_library(
 
 kai_c_library(
     name = "i8mm_impl_asm",
-    srcs = [ukernel + "_asm.S" for ukernel in I8MM_KERNELS_ASM],
+    srcs = [ukernel + "_asm.S" for ukernel in I8MM_KERNELS_ASM] + [ukernel + ".c" for ukernel in I8MM_KERNELS_ASM],
     cpu_uarch = kai_cpu_i8mm(),
+    textual_hdrs = [ukernel + ".h" for ukernel in I8MM_KERNELS_ASM],
 )
 
 kai_c_library(
