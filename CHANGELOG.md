@@ -16,6 +16,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
     - Optimizations for FEAT_I8MM.
 - Fixes:
   - Remove "-Weffc++" from build flags
+  - Fix out-of-bound read from LHS packed matrix in `kai_matmul_clamp_f32_qsi8d32p1vlx4_qsi4c32p4vlx4_1vlx4vl_sme2_mopa`.
 
 ## v1.4.0
 
