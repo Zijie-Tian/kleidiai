@@ -10,6 +10,8 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 ## Upcoming Release
 
+- Add CMake installation and `find_package()` support.
+
 ## v1.5.0
 
 - Extend benchmark tool to support all matrix multiplication micro-kernels.

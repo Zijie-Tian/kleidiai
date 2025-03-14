@@ -26,6 +26,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+include(GNUInstallDirs)
+
 option(KLEIDIAI_BUILD_TESTS       "Build unit tests."             ON)
 option(KLEIDIAI_BUILD_BENCHMARK   "Build the benchmark tool."     OFF)
 option(KLEIDIAI_ENABLE_CLANG_TIDY "Build with Clang-Tidy checks." OFF)
@@ -208,6 +210,8 @@ set(KLEIDIAI_FILES_SME2
 )
 
 add_library(kleidiai)
+add_library(${PROJECT_NAME}::kleidiai ALIAS kleidiai)
+
 target_sources(kleidiai PRIVATE ${KLEIDIAI_FILES_SCALAR})
 
 # Selectively enable architecture features.
@@ -248,8 +252,9 @@ else()
     set_source_files_properties(${KLEIDIAI_FILES_ASM} PROPERTIES LANGUAGE ASM_MARMASM)
 endif()
 
-target_include_directories(kleidiai
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+target_include_directories(kleidiai PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_compile_options(kleidiai
@@ -372,3 +377,48 @@ if(KLEIDIAI_BUILD_BENCHMARK)
             benchmark::benchmark
     )
 endif()
+
+install(TARGETS kleidiai
+    EXPORT ${PROJECT_NAME}Targets
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+)
+
+install(EXPORT ${PROJECT_NAME}Targets
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    NAMESPACE ${PROJECT_NAME}::
+)
+
+install(DIRECTORY kai
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILES_MATCHING
+        PATTERN *.h
+)
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+set(ConfigContents "@PACKAGE_INIT@\n
+include(\"\${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}Targets.cmake\")\n"
+)
+
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in"
+    "${ConfigContents}"
+)
+
+configure_package_config_file("${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake.in"
+    "${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
