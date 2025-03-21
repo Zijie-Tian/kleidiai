@@ -25,10 +25,12 @@
 #include "test/common/cpu_info.hpp"
 #include "test/common/data_format.hpp"
 #include "test/common/data_type.hpp"
+#include "test/common/float16.hpp"
 #include "test/common/matmul_test_common.hpp"
 #include "test/common/matrix_portion.hpp"
 #include "test/common/printer.hpp"
 #include "test/common/sme.hpp"
+#include "test/reference/clamp.hpp"
 #include "test/reference/fill.hpp"
 #include "test/reference/pack.hpp"
 
@@ -360,6 +362,8 @@ protected:
         std::vector<uint8_t> rhs_t{};           ///< Transposed RHS matrix.
         std::vector<uint8_t> ref_packed_rhs{};  ///< Reference packed RHS.
         std::vector<uint8_t> ref_dst{};         ///< Reference output.
+        float clamp_min{};                      ///< Minimum output value.
+        float clamp_max{};                      ///< Maximum output value.
     };
 
     /// Gets the test data for the current test case.
@@ -427,6 +431,37 @@ protected:
             method.dst_format.data_type(),                                          //
             info.m, info.n, info.k, false, false);
 
+        float clamp_min = 0.0F;
+        float clamp_max = 0.0F;
+        constexpr float clamp_ratio = 0.8F;
+
+        switch (method.dst_format.data_type()) {
+            case DataType::FP32: {
+                const auto [min_value, max_value] =
+                    find_clamp_range<float>(ref_dst.data(), info.m * info.n, clamp_ratio);
+                ref_dst = clamp<float>(ref_dst.data(), info.m * info.n, min_value, max_value);
+
+                clamp_min = min_value;
+                clamp_max = max_value;
+
+                break;
+            }
+
+            case DataType::FP16: {
+                const auto [min_value, max_value] =
+                    find_clamp_range<Float16>(ref_dst.data(), info.m * info.n, clamp_ratio);
+                ref_dst = clamp<Float16>(ref_dst.data(), info.m * info.n, min_value, max_value);
+
+                clamp_min = static_cast<float>(min_value);
+                clamp_max = static_cast<float>(max_value);
+
+                break;
+            }
+
+            default:
+                KAI_ERROR("Unsupported data type!");
+        }
+
         const auto& data = _data[data_id] = {
             .lhs = std::move(lhs),
             .ref_packed_lhs = std::move(ref_packed_lhs),
@@ -436,6 +471,8 @@ protected:
             .rhs_t = std::move(rhs_t),
             .ref_packed_rhs = std::move(packed_rhs),
             .ref_dst = std::move(ref_dst),
+            .clamp_min = clamp_min,
+            .clamp_max = clamp_max,
         };
 
         return data;
@@ -730,8 +767,7 @@ TEST_P(MatMulTest, Output) {
 
     method.main_kernel(
         rect.height(), rect.width(), info.k, lhs_data + lhs_offset, rhs_data + rhs_offset, bias_data + bias_offset,
-        dst.data() + dst_offset, lhs_stride, rhs_stride, dst_stride, -std::numeric_limits<float>::infinity(),
-        std::numeric_limits<float>::infinity());
+        dst.data() + dst_offset, lhs_stride, rhs_stride, dst_stride, data.clamp_min, data.clamp_max);
 
     DefaultMismatchHandler handler(0, 0.1, 0, 0.05);
     const auto success = compare(dst.data(), data.ref_dst.data(), method.dst_format, info.m, info.n, rect, handler);

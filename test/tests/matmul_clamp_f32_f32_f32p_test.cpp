@@ -25,6 +25,7 @@
 #include "test/common/data_type.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/test_suite.hpp"
+#include "test/reference/clamp.hpp"
 #include "test/reference/fill.hpp"
 #include "test/reference/matmul.hpp"
 
@@ -89,9 +90,14 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     const auto ref_bias = fill_random<float>(n, seed + 2);
 
     // Runs the reference implementation
-    const auto ref_dst = matmul(
+    const auto ref_dst_no_clamp = matmul(
         ref_lhs.data(), nullptr, nullptr, DataType::FP32, ref_rhs.data(), nullptr, nullptr, DataType::FP32,
         ref_bias.data(), nullptr, nullptr, DataType::FP32, DataType::FP32, m, n, k, false, false);
+
+    // Clamps the reference output.
+    const auto clamp_ratio = 0.8F;
+    const auto [clamp_min, clamp_max] = find_clamp_range<float>(ref_dst_no_clamp.data(), m * n, clamp_ratio);
+    const auto ref_dst = clamp<float>(ref_dst_no_clamp.data(), m * n, clamp_min, clamp_max);
 
     // Run the RHS packing micro-kernel.
     const auto rhs_stride = n * sizeof(float);
@@ -124,8 +130,8 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
 
     std::vector<uint8_t> imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        m, n, k, ref_lhs.data(), 1, imp_packed_rhs->data(), reinterpret_cast<float*>(imp_dst.data()), 1, 1,
-        std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max());
+        m, n, k, ref_lhs.data(), 1, imp_packed_rhs->data(), reinterpret_cast<float*>(imp_dst.data()), 1, 1, clamp_min,
+        clamp_max);
 
     // Compare the output of the micro-kernels against the output of the reference implementation.
     for (size_t y = 0; y < m; ++y) {

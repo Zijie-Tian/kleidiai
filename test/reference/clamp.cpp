@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -11,10 +11,43 @@
 #include <cstdint>
 #include <vector>
 
+#include "kai/kai_common.h"
+#include "test/common/float16.hpp"
 #include "test/common/memory.hpp"
+#include "test/common/numeric_limits.hpp"
 #include "test/common/round.hpp"
 
 namespace kai::test {
+
+template <typename T>
+std::tuple<T, T> find_clamp_range(const void* src, size_t len, float ratio) {
+    KAI_ASSUME(ratio > 0.0F);
+    KAI_ASSUME(ratio <= 1.0F);
+
+    T min_value = numeric_highest<T>;
+    T max_value = numeric_lowest<T>;
+
+    for (size_t i = 0; i < len; ++i) {
+        const T value = read_array<T>(src, i);
+
+        min_value = std::min(min_value, value);
+        max_value = std::max(max_value, value);
+    }
+
+    min_value = std::max(min_value, numeric_lowest<T>);
+    max_value = std::min(max_value, numeric_highest<T>);
+
+    const T range = max_value - min_value;
+    const T reduction = static_cast<T>(static_cast<float>(range) * (1.0F - ratio) / 2);
+
+    const T clamp_min_value = min_value + reduction;
+    const T clamp_max_value = max_value - reduction;
+
+    return {clamp_min_value, clamp_max_value};
+}
+
+template std::tuple<float, float> find_clamp_range(const void* src, size_t len, float ratio);
+template std::tuple<Float16, Float16> find_clamp_range(const void* src, size_t len, float ratio);
 
 template <typename T>
 std::vector<uint8_t> clamp(const void* src, size_t len, T min_value, T max_value) {
@@ -28,5 +61,6 @@ std::vector<uint8_t> clamp(const void* src, size_t len, T min_value, T max_value
 }
 
 template std::vector<uint8_t> clamp(const void* src, size_t len, float min_value, float max_value);
+template std::vector<uint8_t> clamp(const void* src, size_t len, Float16 min_value, Float16 max_value);
 
 }  // namespace kai::test

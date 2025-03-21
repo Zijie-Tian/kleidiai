@@ -91,7 +91,7 @@ void kai_run_matmul_clamp_f32_f32_f32p16vlx1b_1x16vl_sme2_mla(
     const void* B_ptr = rhs_packed;
     void* output_ptr = dst;
 
-    uint64_t flags = 0;
+    uint64_t flags = 2;
 
     __asm__ __volatile__(
         ".inst 0xd503477f  // SMSTART ZA\n"
