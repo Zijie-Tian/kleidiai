@@ -12,6 +12,11 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 
 - Add CMake installation and `find_package()` support.
 - Optimize RHS packing qsu4c32s16s0->qsi4c32pscalef16
+- Fixes:
+  - Fix issue where the following kernels ignored clamping parameters:
+    - kai_matmul_clamp_f32_f32_f32p16vlx1b_1x16vl_sme2_mla
+    - kai_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot
+    - kai_matmul_clamp_f32_f32_f32p2vlx1b_1x16vl_sme2_mla
 
 ## v1.5.0
 
