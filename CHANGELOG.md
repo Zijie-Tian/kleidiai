@@ -11,6 +11,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 ## Upcoming Release
 
 - Add CMake installation and `find_package()` support.
+- Optimize RHS packing qsu4c32s16s0->qsi4c32pscalef16
 
 ## v1.5.0
 
