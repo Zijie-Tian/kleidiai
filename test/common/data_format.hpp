@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -34,9 +34,9 @@ public:
     /// @param[in] subblock_height Sub-block height.
     /// @param[in] subblock_width Sub-block width.
     DataFormat(
-        DataType data_type, size_t block_height = 0, size_t block_width = 0, PackFormat pack_format = PackFormat::NONE,
-        DataType zero_point_dt = DataType::UNKNOWN, DataType scale_dt = DataType::UNKNOWN, size_t subblock_height = 0,
-        size_t subblock_width = 0) noexcept;
+        DataType data_type = DataType::UNKNOWN, size_t block_height = 0, size_t block_width = 0,
+        PackFormat pack_format = PackFormat::NONE, DataType zero_point_dt = DataType::UNKNOWN,
+        DataType scale_dt = DataType::UNKNOWN, size_t subblock_height = 0, size_t subblock_width = 0) noexcept;
 
     /// Equality operator.
     [[nodiscard]] bool operator==(const DataFormat& rhs) const;
