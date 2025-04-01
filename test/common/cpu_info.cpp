@@ -106,7 +106,7 @@ bool get_cap_support(CpuFeatures feature) {
 }
 #elif defined(__aarch64__) && defined(__APPLE__)
 const std::array<std::tuple<CpuFeatures, std::string_view>, CpuFeatures::LAST_ELEMENT> cpu_caps{{
-    {CpuFeatures::ADVSIMD, "hw.optional.AdvSIMD"},
+    {CpuFeatures::ADVSIMD, "hw.optional.arm64"},  // Advanced SIMD is always present on arm64
     {CpuFeatures::DOTPROD, "hw.optional.arm.FEAT_DotProd"},
     {CpuFeatures::I8MM, "hw.optional.arm.FEAT_I8MM"},
     {CpuFeatures::FP16, "hw.optional.arm.FEAT_FP16"},
