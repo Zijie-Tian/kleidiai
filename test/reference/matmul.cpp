@@ -335,6 +335,15 @@ matmul_nt_t_quantized<int8_t, float, int32_t, int8_t, float, int32_t, int32_t, f
     const void* bias_data, const void* bias_scales, const void* bias_zero_points, size_t bias_quant_width);
 
 template std::vector<uint8_t>
+matmul_nt_t_quantized<int8_t, float, int32_t, Int4, float, int32_t, float, float, int32_t, float>(
+    size_t m, size_t n, size_t k,  //
+    const void* lhs_data, const void* lhs_scales, const void* lhs_zero_points, size_t lhs_quant_height,
+    size_t lhs_quant_width,  //
+    const void* rhs_data, const void* rhs_scales, const void* rhs_zero_points, size_t rhs_quant_height,
+    size_t rhs_quant_width,  //
+    const void* bias_data, const void* bias_scales, const void* bias_zero_points, size_t bias_quant_width);
+
+template std::vector<uint8_t>
 indirect_matmul_nt_t_quantized<int8_t, float, int32_t, int8_t, float, int32_t, int32_t, float, int32_t, float>(
     size_t m, size_t n, size_t k_chunk_count, size_t k_chunk_length,  //
     const void* const* lhs_ptrs, uintptr_t lhs_offset, const void* lhs_padding, const void* lhs_scales,

@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -124,5 +124,6 @@ std::vector<uint8_t> fill_random(size_t length, uint32_t seed) {
 }
 
 template std::vector<uint8_t> fill_random<float>(size_t length, uint32_t seed);
+template std::vector<uint8_t> fill_random<Float16>(size_t length, uint32_t seed);
 
 }  // namespace kai::test

@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -8,8 +8,11 @@
 
 #include <cstdint>
 #include <tuple>
+#include <vector>
 
 #include "kai/kai_common.h"
+#include "test/common/memory.hpp"
+#include "test/common/round.hpp"
 
 namespace kai::test {
 
@@ -109,6 +112,21 @@ std::tuple<Int4, Int4> Int4::unpack_u8(uint8_t value) {
     // NOLINTEND(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
 
     return {Int4(low), Int4(high)};
+}
+
+// =====================================================================================================================
+
+std::vector<uint8_t> convert_s0s1_s1s0(const std::vector<uint8_t>& src) {
+    const auto length = src.size();
+    std::vector<uint8_t> dst(length);
+
+    for (size_t i = 0; i < length; ++i) {
+        uint8_t val = read_array<uint8_t>(src.data(), i);
+        const auto [low, high] = UInt4::unpack_u8(val);
+        auto rev_val = UInt4::pack_u8(high, low);
+        write_array<uint8_t>(dst.data(), i, rev_val);
+    }
+    return dst;
 }
 
 }  // namespace kai::test

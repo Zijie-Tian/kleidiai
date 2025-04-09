@@ -97,6 +97,7 @@ struct HashMatMulShape {
 /// Matrix multiplication test information.
 using MatMulTestParams = std::tuple<size_t, MatMulShape>;
 using MatMulTestPortionedParams = std::tuple<size_t, MatMulShape, MatrixPortion>;
+using MatMulTestPortionedParamsWithBias = std::tuple<size_t, MatMulShape, MatrixPortion, bool>;
 
 class UkernelVariantTest : public ::testing::TestWithParam<MatMulTestParams> {};
 

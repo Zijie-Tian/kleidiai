@@ -28,8 +28,8 @@ namespace {
 
 template <typename FloatData, typename IntData, typename ZeroPoint>
 std::tuple<FloatData, ZeroPoint> get_scale_zero_point_from_range(FloatData min_value, FloatData max_value) {
-    constexpr FloatData q_min = std::numeric_limits<IntData>::min();
-    constexpr FloatData q_max = std::numeric_limits<IntData>::max();
+    const FloatData q_min = numeric_lowest<IntData>;
+    const FloatData q_max = numeric_highest<IntData>;
 
     if (min_value > 0) {
         min_value = 0;
@@ -291,5 +291,7 @@ quantize_asymmetric_per_block_dynamic<float, int8_t, float, int32_t>(
 template std::tuple<std::vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>>
 quantize_asymmetric_per_block_dynamic<float, int8_t, BFloat16, int32_t>(
     const void* src, size_t height, size_t width, size_t quant_width);
-
+template std::tuple<std::vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>>
+quantize_asymmetric_per_block_dynamic<float, Int4, float, int32_t>(
+    const void* src, size_t height, size_t width, size_t quant_width);
 }  // namespace kai::test
