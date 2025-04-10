@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <iosfwd>
 #include <type_traits>
 
@@ -45,14 +46,12 @@ public:
 
     /// Converts to single-precision floating-point.
     explicit operator float() const {
-        union {
-            float f32;
-            uint32_t u32;
-        } data;
+        float value_f32 = 0.0F;
+        uint32_t value_u32 = static_cast<uint32_t>(m_data) << 16;
 
-        data.u32 = static_cast<uint32_t>(m_data) << 16;
+        memcpy(&value_f32, &value_u32, sizeof(float));
 
-        return data.f32;
+        return value_f32;
     }
 
 private:
