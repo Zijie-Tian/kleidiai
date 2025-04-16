@@ -310,6 +310,13 @@ target_compile_options(kleidiai
     PRIVATE ${KLEIDIAI_WARNING_FLAGS}
 )
 
+# Micro-kernel library does not support link time optimization.
+#
+# The linker does not respect the use of -fno-tree-vectorize when building
+# SME kernels. LTO can only be enabled once there is no need for disabling
+# auto-vectorization.
+set_target_properties(kleidiai PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
+
 if(KLEIDIAI_BUILD_TESTS)
     include(FetchGTest)
     enable_testing()
