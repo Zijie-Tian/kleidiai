@@ -399,9 +399,10 @@ if(KLEIDIAI_BUILD_TESTS)
         )
 
         set_source_files_properties(
-            test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f16_bf16p_bf16p_test.cpp
+            test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f32_qai8dxp_qsi4cxp_test.cpp
+            test/tests/matmul_clamp_qai8_qai8p_qsi8cxp_test.cpp
             test/tests/matmul_test.cpp
             PROPERTIES COMPILE_FLAGS "-Wpedantic")
     endif()
