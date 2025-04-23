@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -12,6 +12,7 @@
 
 #include "kai/kai_common.h"
 #include "test/common/bfloat16.hpp"
+#include "test/common/data_type.hpp"
 #include "test/common/int4.hpp"
 
 namespace kai::test {
@@ -50,6 +51,15 @@ T read_array(const void* array, size_t index) {
     }
 }
 
+/// Reads the array at the specified index
+///
+/// @param[in] type Array element data type
+/// @param[in] array Data buffer.
+/// @param[in] index Array index.
+///
+/// @return Value at specified index
+double read_array(DataType type, const void* array, size_t index);
+
 /// Writes the specified value to the array.
 ///
 /// @param[in] array Data buffer.
@@ -79,5 +89,13 @@ void write_array(void* array, size_t index, T value) {
         reinterpret_cast<T*>(array)[index] = value;
     }
 }
+
+/// Writes the specified value to the array.
+///
+/// @param[in] type Array element type.
+/// @param[in] array Data buffer.
+/// @param[in] index Array index.
+/// @param[in] value Value to be stored.
+void write_array(DataType type, void* array, size_t index, double value);
 
 }  // namespace kai::test

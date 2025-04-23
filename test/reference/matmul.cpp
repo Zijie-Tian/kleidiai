@@ -184,12 +184,42 @@ std::vector<uint8_t> matmul(
     return tmp_dst;
 }
 
+std::vector<uint8_t> indirect_matmul(
+    const void* const* lhs_idata, uintptr_t lhs_offset, const void* lhs_padding_ptr, const void* lhs_scales,
+    const void* lhs_zero_points,
+    DataType lhs_dt,  //
+    const void* rhs, const void* rhs_scales, const void* rhs_zero_points,
+    DataType rhs_dt,                                                                            //
+    const void* bias, const void* bias_scales, const void* bias_zero_points, DataType bias_dt,  //
+    DataType dst_dt,                                                                            //
+    size_t m, size_t n, size_t k_chunk_count, size_t k_chunk_length) {
+    // This is inefficient, but allows code-reuse
+    const size_t chunk_bytes = k_chunk_length * round_up_division(data_type_size_in_bits(lhs_dt), 8);
+    const size_t n_chunks = m * k_chunk_count;
+    std::vector<uint8_t> lhs(n_chunks * chunk_bytes);
+
+    // Copy all chunks to the created matrix
+    for (size_t i = 0; i < n_chunks; i += 1) {
+        const uint8_t* src_pointer = static_cast<const uint8_t*>(lhs_idata[i]);
+        if (src_pointer != lhs_padding_ptr) {
+            src_pointer += lhs_offset;
+        }
+        memcpy(lhs.data() + i * chunk_bytes, src_pointer, chunk_bytes);
+    }
+
+    return matmul(
+        lhs.data(), lhs_scales, lhs_zero_points, lhs_dt,  //
+        rhs, rhs_scales, rhs_zero_points, rhs_dt,         //
+        bias, bias_scales, bias_zero_points, bias_dt,     //
+        dst_dt, m, n, k_chunk_count * k_chunk_length, false, false);
+}
+
 template <
     typename LhsData, typename LhsScale, typename LhsZeroPoint, typename RhsData, typename RhsScale,
     typename RhsZeroPoint, typename BiasData, typename BiasScale, typename BiasZeroPoint, typename DstData>
 std::vector<uint8_t> indirect_matmul_nt_t_quantized(
     size_t m, size_t n, size_t k_chunk_count, size_t k_chunk_length,  //
-    const void* const* lhs_ptrs, uintptr_t lhs_offset, const void* lhs_padding, const void* lhs_scales,
+    const void* const* lhs_ptrs, uintptr_t lhs_offset, const void* lhs_padding_ptr, const void* lhs_scales,
     const void* lhs_zero_points, size_t lhs_quant_height,
     size_t lhs_quant_width,  //
     const void* rhs_data, const void* rhs_scales, const void* rhs_zero_points, size_t rhs_quant_height,
@@ -208,7 +238,7 @@ std::vector<uint8_t> indirect_matmul_nt_t_quantized(
                 // Calculate the K chunk pointer. Apply offset if this is not padding
                 const size_t k_chunk_idx = i_m * k_chunk_count + i_k_chunk;
                 const void* k_chunk_ptr = lhs_ptrs[k_chunk_idx];
-                if (k_chunk_ptr != lhs_padding) {
+                if (k_chunk_ptr != lhs_padding_ptr) {
                     k_chunk_ptr = reinterpret_cast<const void*>(reinterpret_cast<uintptr_t>(k_chunk_ptr) + lhs_offset);
                 }
 

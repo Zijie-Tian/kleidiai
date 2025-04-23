@@ -11,6 +11,8 @@
 #include <tuple>
 #include <vector>
 
+#include "test/common/data_type.hpp"
+
 namespace kai::test {
 
 /// Finds the clamping parameters to limit the dynamic range.
@@ -23,6 +25,16 @@ namespace kai::test {
 template <typename T>
 std::tuple<T, T> find_clamp_range(const void* src, size_t len, float ratio);
 
+/// Finds the clamping parameters to limit the dynamic range.
+///
+/// @param[in] type Array element data type.
+/// @param[in] src The data buffer.
+/// @param[in] len The number of values.
+/// @param[in] ratio The ratio between the output dynamic range and the input dynamic range.
+///
+/// @return The minimum value and the maximum value.
+std::tuple<float, float> find_clamp_range(DataType type, const void* src, size_t len, float ratio);
+
 /// Clamps the matrix.
 ///
 /// @param[in] src Data buffer of the source matrix.
@@ -32,4 +44,12 @@ std::tuple<T, T> find_clamp_range(const void* src, size_t len, float ratio);
 template <typename T>
 std::vector<uint8_t> clamp(const void* src, size_t len, T min_value, T max_value);
 
+/// Clamps the matrix.
+///
+/// @param[in] type Array element data type.
+/// @param[in] src Data buffer of the source matrix.
+/// @param[in] len Number of values in the source matrix.
+/// @param[in] min_value Lower bound of clamp.
+/// @param[in] max_value Upper bound of clamp.
+std::vector<uint8_t> clamp(DataType type, const void* src, size_t len, float min_value, float max_value);
 }  // namespace kai::test

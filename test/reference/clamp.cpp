@@ -49,6 +49,20 @@ std::tuple<T, T> find_clamp_range(const void* src, size_t len, float ratio) {
 template std::tuple<float, float> find_clamp_range(const void* src, size_t len, float ratio);
 template std::tuple<Float16, Float16> find_clamp_range(const void* src, size_t len, float ratio);
 
+std::tuple<float, float> find_clamp_range(DataType type, const void* src, size_t len, float ratio) {
+    auto max = std::numeric_limits<double>::min();
+    auto min = std::numeric_limits<double>::max();
+
+    for (size_t i = 0; i < len; i += 1) {
+        const double value = read_array(type, src, i);
+        max = std::max(value, max);
+        min = std::min(value, min);
+    }
+
+    const float reduction = (max - min) * (1.0F - ratio) / 2.0F;
+    return {min + reduction, max - reduction};
+}
+
 template <typename T>
 std::vector<uint8_t> clamp(const void* src, size_t len, T min_value, T max_value) {
     std::vector<uint8_t> dst(round_up_division(len * size_in_bits<T>, 8));
@@ -62,5 +76,15 @@ std::vector<uint8_t> clamp(const void* src, size_t len, T min_value, T max_value
 
 template std::vector<uint8_t> clamp(const void* src, size_t len, float min_value, float max_value);
 template std::vector<uint8_t> clamp(const void* src, size_t len, Float16 min_value, Float16 max_value);
+
+std::vector<uint8_t> clamp(DataType type, const void* src, size_t len, float min_value, float max_value) {
+    std::vector<uint8_t> dst(round_up_division(len * data_type_size_in_bits(type), 8));
+
+    for (size_t i = 0; i < len; ++i) {
+        write_array(type, dst.data(), i, std::clamp<float>(read_array(type, src, i), min_value, max_value));
+    }
+
+    return dst;
+}
 
 }  // namespace kai::test

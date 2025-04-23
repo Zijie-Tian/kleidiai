@@ -141,6 +141,11 @@ public:
     /// @return The size in bytes of the matrix.
     [[nodiscard]] size_t default_size_in_bytes(size_t height, size_t width) const;
 
+    /// Hash functor
+    struct Hash {
+        size_t operator()(const DataFormat& format) const;
+    };
+
 private:
     DataType _data_type;
     PackFormat _pack_format;

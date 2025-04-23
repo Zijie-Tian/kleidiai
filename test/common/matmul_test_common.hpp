@@ -22,6 +22,34 @@ struct MatMulShape {
     size_t m;  ///< LHS height.
     size_t n;  ///< RHS width.
     size_t k;  ///< LHS width and RHS height.
+
+    struct Hash {
+        size_t operator()(const MatMulShape& shape) const {
+            return                                     //
+                (std::hash<size_t>{}(shape.m) << 0) ^  //
+                (std::hash<size_t>{}(shape.n) << 1) ^  //
+                (std::hash<size_t>{}(shape.k) << 2);   //
+        }
+    };
+
+private:
+    friend bool operator==(const MatMulShape& lhs, const MatMulShape& rhs) {
+        return                 //
+            lhs.m == rhs.m &&  //
+            lhs.n == rhs.n &&  //
+            lhs.k == rhs.k;
+    }
+};
+
+/// Value range
+template <typename T>
+struct Range {
+    T min;
+    T max;
+
+    [[nodiscard]] T range() const {
+        return max - min;
+    }
 };
 
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
@@ -459,4 +487,6 @@ using MatMulTestParams = std::tuple<MatMulMethod, MatMulShape, MatrixPortion>;
 
 /// Prints the test information.
 void PrintTo(const MatMulTestParams& param, std::ostream* os);
+void PrintTo(const MatMulShape& shape, std::ostream* os);
+void PrintTo(const MatrixPortion& portion, std::ostream* os);
 }  // namespace kai::test

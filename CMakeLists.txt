@@ -222,11 +222,13 @@ set(KLEIDIAI_FILES_NEON_I8MM
 )
 
 set(KLEIDIAI_FILES_SME
+    kai/ukernels/matmul/pack/kai_lhs_imatmul_pack_x16p2vlx2_x16p_sme.c
     kai/ukernels/matmul/pack/kai_lhs_imatmul_pack_x8p2vlx4_x8p_sme.c
     kai/ukernels/matmul/pack/kai_lhs_pack_f32p2vlx1_f32_sme.c
     kai/ukernels/matmul/pack/kai_lhs_pack_x16p2vlx2_x16_sme.c
     kai/ukernels/matmul/pack/kai_lhs_pack_x8p2vlx4_x8_sme.c
     kai/ukernels/matmul/pack/kai_rhs_imatmul_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.c
+    kai/ukernels/matmul/pack/kai_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme.c
     kai/ukernels/matmul/pack/kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme.c
     kai/ukernels/matmul/pack/kai_rhs_pack_kxn_f32p2vlx1biasf32_f32_f32_sme.c
     kai/ukernels/matmul/pack/kai_rhs_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.c
@@ -236,6 +238,7 @@ set(KLEIDIAI_FILES_SME
 )
 
 set(KLEIDIAI_FILES_SME2
+    kai/ukernels/matmul/imatmul_clamp_f16_f16p_f16p/kai_imatmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa.c
     kai/ukernels/matmul/imatmul_clamp_qai8_qai8p_qsi8cxp/kai_imatmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa.c
     kai/ukernels/matmul/matmul_clamp_f16_f16_f16p/kai_matmul_clamp_f16_f16_f16p2vlx2b_1x16vl_sme2_dot.c
     kai/ukernels/matmul/matmul_clamp_f16_f16p_f16p/kai_matmul_clamp_f16_f16p2vlx2_f16p2vlx2_2vlx2vl_sme2_mopa.c
@@ -334,6 +337,7 @@ if(KLEIDIAI_BUILD_TESTS)
         test/common/int4.cpp
         test/common/matmul_test_common.cpp
         test/common/matrix_portion.cpp
+        test/common/memory.cpp
         test/common/printer.cpp
         test/common/rect.cpp
         test/common/round.cpp
@@ -383,6 +387,7 @@ if(KLEIDIAI_BUILD_TESTS)
         add_executable(kleidiai_test
             test/tests/bfloat16_test.cpp
             test/tests/float16_test.cpp
+            test/tests/imatmul_test.cpp
             test/tests/matmul_clamp_f16_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f32_f32_f32p_test.cpp
@@ -399,6 +404,7 @@ if(KLEIDIAI_BUILD_TESTS)
         )
 
         set_source_files_properties(
+            test/tests/imatmul_test.cpp
             test/tests/matmul_clamp_f16_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f32_bf16p_bf16p_test.cpp
             test/tests/matmul_clamp_f32_qai8dxp_qsi4cxp_test.cpp

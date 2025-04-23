@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 #include "kai/kai_common.h"
 #include "test/common/data_type.hpp"
@@ -173,6 +174,20 @@ size_t DataFormat::default_size_in_bytes(size_t height, size_t width) const {
     const auto num_rows = _block_height > 0 ? (height + _block_height - 1) / _block_height : height;
     const auto block_stride = default_row_stride(width);
     return num_rows * block_stride;
+}
+
+size_t DataFormat::Hash::operator()(const DataFormat& format) const {
+    using DT = std::underlying_type_t<DataType>;
+    using PF = std::underlying_type_t<PackFormat>;
+    return                                                                //
+        (std::hash<DT>{}(static_cast<DT>(format._data_type)) << 0) ^      //
+        (std::hash<PF>{}(static_cast<PF>(format._zero_point_dt)) << 1) ^  //
+        (std::hash<DT>{}(static_cast<DT>(format._scale_dt) << 2)) ^       //
+        (std::hash<DT>{}(static_cast<DT>(format._zero_point_dt)) << 3) ^  //
+        (std::hash<size_t>{}(format._block_height) << 4) ^                //
+        (std::hash<size_t>{}(format._block_width) << 5) ^                 //
+        (std::hash<size_t>{}(format._subblock_height) << 6) ^             //
+        (std::hash<size_t>{}(format._subblock_width) << 7);               //
 }
 
 }  // namespace kai::test
