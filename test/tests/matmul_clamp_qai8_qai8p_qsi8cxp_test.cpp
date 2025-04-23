@@ -378,6 +378,17 @@ struct TestDataId {
     bool pad_testing;
     float clamp_ratio;
 
+    struct Hash {
+        size_t operator()(const TestDataId& id) const {
+            return                                           //
+                (MatMulShape::Hash{}(id.shape) << 0) ^       //
+                (MatMulShape::Hash{}(id.shape_pack) << 1) ^  //
+                (std::hash<size_t>{}(id.chunk_len) << 2) ^   //
+                (std::hash<bool>{}(id.pad_testing) << 3) ^   //
+                (std::hash<float>{}(id.clamp_ratio) << 4);
+        }
+    };
+
 private:
     friend bool operator==(const TestDataId& lhs, const TestDataId& rhs) {
         return                                     //
@@ -389,19 +400,8 @@ private:
     }
 };
 
-struct HashTestDataId {
-    size_t operator()(const TestDataId& id) const {
-        return                                          //
-            (HashMatMulShape{}(id.shape) << 0) ^        //
-            (HashMatMulShape{}(id.shape_pack) << 1) ^   //
-            (std::hash<size_t>{}(id.chunk_len) << 2) ^  //
-            (std::hash<bool>{}(id.pad_testing) << 3) ^  //
-            (std::hash<float>{}(id.clamp_ratio) << 4);
-    }
-};
-
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
-std::unordered_map<TestDataId, TestReference, HashTestDataId> g_data;
+std::unordered_map<TestDataId, TestReference, TestDataId::Hash> g_data;
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 /// Generate test reference data

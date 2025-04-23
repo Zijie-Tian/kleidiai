@@ -73,6 +73,7 @@ void kai_run_rhs_imatmul_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme(
     const void* scale, void* rhs_packed, const struct kai_rhs_pack_qsi8cx_params* params) {
     KAI_ASSUME(rhs != NULL);
     KAI_ASSUME(bias != NULL);
+    KAI_ASSUME(scale != NULL);
     KAI_ASSUME(rhs_packed != NULL);
     KAI_ASSUME(params != NULL);
 
