@@ -19,6 +19,7 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
 - New SME2 micro-kernels:
   - Indirect matrix multiplication (MxN) of FP16 input and output.
     - Matrix multiplication of packed indirect LHS and packed RHS
+- Disable link time optimization for microkernel library
 
 ## v1.7.0
 
