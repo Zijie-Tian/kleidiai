@@ -14,10 +14,14 @@ KleidiAI follows the [Semantic Versioning](https://semver.org/) specification fo
   - Matrix multiplication (MxN) Micro-kernels of QAI8DX LHS and QSI8CX RHS with F16 output, optimized for FEAT_I8MM and FEAT_DotProd.
   - Matrix multiplication (1xN) Micro-kernels of QAI8DX LHS and QSI8CX RHS with F16 output, optimized for FEAT_DotProd.
 - New SME micro-kernels:
-  - Indirect matrix multiplication (MxN) of FP16 input and output.
+  - Indirect matrix multiplication (MxN) of F16 input and output.
+    - Packing kernels for LHS and RHS
+  - Indirect matrix multiplication (MxN) of F32 input and output.
     - Packing kernels for LHS and RHS
 - New SME2 micro-kernels:
-  - Indirect matrix multiplication (MxN) of FP16 input and output.
+  - Indirect matrix multiplication (MxN) of F16 input and output.
+    - Matrix multiplication of packed indirect LHS and packed RHS
+  - Indirect matrix multiplication (MxN) of F32 input and output.
     - Matrix multiplication of packed indirect LHS and packed RHS
 - Disable link time optimization for microkernel library
 
