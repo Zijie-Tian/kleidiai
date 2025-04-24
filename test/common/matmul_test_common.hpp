@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iosfwd>
 #include <string_view>
 #include <tuple>
 
@@ -39,6 +40,7 @@ private:
             lhs.n == rhs.n &&  //
             lhs.k == rhs.k;
     }
+    friend std::ostream& operator<<(std::ostream& os, const MatMulShape& shape);
 };
 
 /// Value range

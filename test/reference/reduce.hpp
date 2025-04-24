@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -25,7 +25,7 @@ enum class ReductionOperator : uint32_t {
 /// @param[in] src_format Input data format.
 /// @param[in] height Number of rows.
 /// @param[in] width Number of columns.
-/// @param[in] dst_foramt Output data format.
+/// @param[in] dst_format Output data format.
 /// @param[in] dimension Reduction dimension.
 ///
 /// @return The reduced matrix.

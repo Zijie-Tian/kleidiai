@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <sstream>
 #include <tuple>
 #include <type_traits>
 
@@ -50,13 +51,17 @@ template <typename Data>
 bool compare_raw(
     const void* imp_data, const void* ref_data, const DataFormat& format, size_t full_height, size_t full_width,
     const Rect& rect, MismatchHandler& handler) {
-    const auto block_height = format.actual_block_height(full_height);
-    const auto block_width = format.actual_block_width(full_width);
-    const auto subblock_height = format.actual_subblock_height(full_height);
-    const auto subblock_width = format.actual_subblock_width(full_width);
+    const size_t block_height = format.actual_block_height(full_height);
+    const size_t block_width = format.actual_block_width(full_width);
+    const size_t subblock_height = format.actual_subblock_height(full_height);
+    const size_t subblock_width = format.actual_subblock_width(full_width);
 
     size_t idx = 0;
 
+    bool block_heading_written = false;
+    bool subblock_heading_written = false;
+    bool row_heading_written = false;
+    std::ostringstream sstream;
     for (size_t y_block = 0; y_block < full_height; y_block += block_height) {
         for (size_t x_block = 0; x_block < full_width; x_block += block_width) {
             for (size_t y_subblock = 0; y_subblock < block_height; y_subblock += subblock_height) {
@@ -76,21 +81,41 @@ bool compare_raw(
                                 const auto notifying = !in_roi || handler.handle_data(abs_err, rel_err);
 
                                 if (notifying) {
-                                    KAI_LOGE(
-                                        "Mismatched data at (", y, ", ", x, "): actual = ", imp_value,
-                                        ", expected: ", ref_value);
+                                    if (!block_heading_written) {
+                                        sstream << "block @ (" << y_block << ", " << x_block << "):\n";
+                                        block_heading_written = true;
+                                    }
+                                    if (!subblock_heading_written) {
+                                        sstream << "  sub-block @ (" << y_subblock << ", " << x_subblock << "):\n";
+                                        subblock_heading_written = true;
+                                    }
+                                    if (!row_heading_written) {
+                                        sstream << "    row=" << y_element << ": ";
+                                        row_heading_written = true;
+                                    }
+                                    sstream << x_element << ", ";
                                 }
                             }
 
                             ++idx;
                         }
+                        if (row_heading_written) {
+                            sstream << "\n";
+                        }
+                        row_heading_written = false;
                     }
+                    subblock_heading_written = false;
                 }
             }
+            block_heading_written = false;
         }
     }
 
-    return handler.success(full_height * full_width);
+    const bool success = handler.success(full_height * full_width);
+    if (!success) {
+        KAI_LOGE("mismatches:\n", sstream.str());
+    }
+    return success;
 }
 
 /// Compares matrices with per-row bias or per-row quantization.

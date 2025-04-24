@@ -6,9 +6,15 @@
 
 #include "matmul_test_common.hpp"
 
+#include <iostream>
 #include <ostream>
 
 namespace kai::test {
+
+std::ostream& operator<<(std::ostream& os, const MatMulShape& shape) {
+    return os << "[m=" << shape.m << ", n=" << shape.n << ", k=" << shape.k << "]";
+}
+
 void PrintTo(const MatMulTestParams& param, std::ostream* os) {
     const auto& [method, shape, portion] = param;
 
