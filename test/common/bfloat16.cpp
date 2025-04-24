@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
+// SPDX-FileCopyrightText: Copyright 2024-2025 Arm Limited and/or its affiliates <open-source-office@arm.com>
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -28,6 +28,14 @@ static_assert(std::is_nothrow_move_assignable_v<BFloat16>);
 
 std::ostream& operator<<(std::ostream& os, BFloat16 value) {
     return os << static_cast<float>(value);
+}
+
+uint16_t BFloat16::float_to_bfloat16_round_towards_zero(float value) {
+    uint32_t value_u32;
+
+    memcpy(&value_u32, &value, sizeof(value));
+
+    return value_u32 >> 16;
 }
 
 }  // namespace kai::test

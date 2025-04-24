@@ -13,13 +13,11 @@
 namespace kai::test {
 
 TEST(BFloat16, SimpleTest) {
-    if (!cpu_has_bf16()) {
-        GTEST_SKIP() << "No CPU support for BFloat16";
-    }
-
     ASSERT_EQ(static_cast<float>(BFloat16()), 0.0F);
     ASSERT_EQ(static_cast<float>(BFloat16(1.25F)), 1.25F);
+    ASSERT_EQ(static_cast<float>(BFloat16(-1.25F)), -1.25F);
     ASSERT_EQ(static_cast<float>(BFloat16(3)), 3.0F);
+    ASSERT_EQ(static_cast<float>(BFloat16(-3)), -3.0F);
 
     ASSERT_FALSE(BFloat16(1.25F) == BFloat16(2.0F));
     ASSERT_TRUE(BFloat16(1.25F) == BFloat16(1.25F));

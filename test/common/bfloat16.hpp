@@ -13,17 +13,6 @@
 
 #include "test/common/type_traits.hpp"
 
-extern "C" {
-
-/// Converts single-precision floating-point to half-precision brain floating-point.
-///
-/// @params[in] value The single-precision floating-point value.
-///
-/// @return The half-precision brain floating-point value reinterpreted as 16-bit unsigned integer.
-uint16_t kai_test_bfloat16_from_float(float value);
-
-}  // extern "C"
-
 namespace kai::test {
 
 /// Half-precision brain floating-point.
@@ -33,14 +22,14 @@ public:
     BFloat16() = default;
 
     /// Creates a new object from the specified numeric value.
-    explicit BFloat16(float value) : m_data(kai_test_bfloat16_from_float(value)) {
+    explicit BFloat16(float value) : m_data(float_to_bfloat16_round_towards_zero(value)) {
     }
 
     /// Assigns to the specified numeric value which will be converted to `bfloat16_t`.
     template <typename T, std::enable_if_t<is_arithmetic<T>, bool> = true>
     BFloat16& operator=(T value) {
         const auto value_f32 = static_cast<float>(value);
-        m_data = kai_test_bfloat16_from_float(value_f32);
+        m_data = float_to_bfloat16_round_towards_zero(value_f32);
         return *this;
     }
 
@@ -72,6 +61,8 @@ private:
     ///
     /// @return The output stream.
     friend std::ostream& operator<<(std::ostream& os, BFloat16 value);
+
+    static uint16_t float_to_bfloat16_round_towards_zero(float value);
 
     uint16_t m_data;
 };
