@@ -7,6 +7,8 @@
 
 #include <stddef.h>
 
+#include "kai/kai_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

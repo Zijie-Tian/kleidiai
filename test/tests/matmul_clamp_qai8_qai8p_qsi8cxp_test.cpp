@@ -25,6 +25,7 @@
 #include "kai/ukernels/matmul/matmul_clamp_qai8_qai8_qsi8cxp/kai_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot.h"
 #include "kai/ukernels/matmul/matmul_clamp_qai8_qai8_qsi8cxp/kai_matmul_clamp_qai8_qai8_qsi8cxp_interface.h"
 #include "kai/ukernels/matmul/matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa.h"
+#include "kai/ukernels/matmul/matmul_clamp_qai8_qai8p_qsi8cxp/kai_matmul_clamp_qai8_qai8p_qsi8cxpsb_interface.h"
 #include "kai/ukernels/matmul/pack/kai_lhs_imatmul_pack_x8p2vlx4_x8p_sme.h"
 #include "kai/ukernels/matmul/pack/kai_lhs_pack_x8p2vlx4_x8_sme.h"
 #include "kai/ukernels/matmul/pack/kai_rhs_imatmul_pack_kxn_qsi8cxp2vlx4sb_qs8cx_f32_i32_sme.h"
@@ -136,7 +137,29 @@ struct MatMulIndirectKernel {
         imatmul;
 };
 
-/// Make sure that interface matches
+/// Make sure that interface matches for qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa
+const kai_matmul_clamp_qai8_qai8p_qsi8cxpsb_ukernel&
+get_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa_interface() {
+    static kai_matmul_clamp_qai8_qai8p_qsi8cxpsb_ukernel ukernel;
+
+    ukernel.get_m_step = kai_get_m_step_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_n_step = kai_get_n_step_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_mr = kai_get_mr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_nr = kai_get_nr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_kr = kai_get_kr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_sr = kai_get_sr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_lhs_packed_offset =
+        kai_get_lhs_packed_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_rhs_packed_offset =
+        kai_get_rhs_packed_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_dst_offset = kai_get_dst_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.get_dst_size = kai_get_dst_size_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    ukernel.run_matmul = kai_run_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+
+    return ukernel;
+}
+
+/// Make sure that interface matches for qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot
 const kai_matmul_clamp_qai8_qai8p_qsi8cxp_ukernel&
 get_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot_interface() {
     static kai_matmul_clamp_qai8_qai8p_qsi8cxp_ukernel ukernel;
@@ -155,7 +178,7 @@ get_matmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot_interface() {
     return ukernel;
 };
 
-/// Make sure that interface matches
+/// Make sure that interface matches qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa
 const kai_imatmul_clamp_qai8_qai8p_qsi8cxp_ukernel&
 get_imatmul_clamp_qai8_qai8_qsi8cxp2vlx4sb_1x16vl_sme2_dot_interface() {
     static kai_imatmul_clamp_qai8_qai8p_qsi8cxp_ukernel ukernel;
@@ -225,6 +248,8 @@ struct IndirectMatMulVariant {
 
 const std::array<MatMulVariant, 1>& get_gemm_variants() {
     static std::array<MatMulVariant, 1> variants;
+    static const kai_matmul_clamp_qai8_qai8p_qsi8cxpsb_ukernel& ukernel =
+        get_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa_interface();
 
     variants[0].name = "matmul_qai8_qai8p_qsi8cxp";
     variants[0].acc_pack.m = 2 * get_sme_vector_length<int32_t>();
@@ -236,20 +261,17 @@ const std::array<MatMulVariant, 1>& get_gemm_variants() {
     variants[0].is_supported = cpu_has_sme2;
     variants[0].lhs_pack = get_lhs_pack();
     variants[0].rhs_pack = get_rhs_pack();
-    variants[0].matmul.get_m_step = kai_get_m_step_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_n_step = kai_get_n_step_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_mr = kai_get_mr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_nr = kai_get_nr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_kr = kai_get_kr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_sr = kai_get_sr_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_packed_lhs_offset =
-        kai_get_lhs_packed_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_packed_rhs_offset =
-        kai_get_rhs_packed_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_dst_offset =
-        kai_get_dst_offset_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.get_dst_size = kai_get_dst_size_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
-    variants[0].matmul.matmul = kai_run_matmul_clamp_qai8_qai8p2vlx4_qsi8cxpsb2vlx4_2vlx2vl_sme2_mopa;
+    variants[0].matmul.get_m_step = ukernel.get_m_step;
+    variants[0].matmul.get_n_step = ukernel.get_n_step;
+    variants[0].matmul.get_mr = ukernel.get_mr;
+    variants[0].matmul.get_nr = ukernel.get_nr;
+    variants[0].matmul.get_kr = ukernel.get_kr;
+    variants[0].matmul.get_sr = ukernel.get_sr;
+    variants[0].matmul.get_packed_lhs_offset = ukernel.get_lhs_packed_offset;
+    variants[0].matmul.get_packed_rhs_offset = ukernel.get_rhs_packed_offset;
+    variants[0].matmul.get_dst_offset = ukernel.get_dst_offset;
+    variants[0].matmul.get_dst_size = ukernel.get_dst_size;
+    variants[0].matmul.matmul = ukernel.run_matmul;
 
     return variants;
 }
