@@ -60,7 +60,6 @@ size_t kai_get_rhs_packed_size_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme(
 ///
 ///   * RHS: @ref kai_get_rhs_offset_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme.
 ///   * Bias: @ref kai_get_bias_offset_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme.
-///   * Scale: @ref kai_get_scale_offset_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme.
 ///   * Output: @ref kai_get_rhs_packed_offset_rhs_imatmul_pack_kxn_x16p2vlx2b_x16_x16_sme.
 ///
 /// @param[in] n Number of columns of the output matrix.
