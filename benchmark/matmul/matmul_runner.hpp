@@ -46,7 +46,7 @@ public:
         n_ = n;
         k_ = k;
 
-        lhs_stride_ = k_ * data_type_size_in_bits(dst_type_);
+        lhs_stride_ = k_ * data_type_size_in_bits(dst_type_) / 8;
         dst_stride_row_ = n_ * data_type_size_in_bits(dst_type_) / 8;
         dst_stride_col_ = data_type_size_in_bits(dst_type_) / 8;
     }

@@ -12,6 +12,7 @@
 #include <functional>
 #include <vector>
 
+#include "kai/kai_common.h"
 #include "matmul_interface.hpp"
 #include "matmul_runner.hpp"
 
@@ -69,9 +70,15 @@ void kai_benchmark_matmul(
     }
 
     // Create sufficiently large buffers
-    const size_t lhs_size = m * k * sizeof(uint64_t);
-    const size_t rhs_size = n * k * sizeof(uint64_t);
-    const size_t dst_size = m * n * sizeof(uint32_t);
+    size_t lhs_size = m * k * sizeof(uint64_t);
+    size_t rhs_size = n * k * sizeof(uint64_t);
+    size_t dst_size = m * n * sizeof(uint32_t);
+
+    if (test::cpu_has_sme() || test::cpu_has_sme2()) {
+        lhs_size *= kai_get_sme_vector_length_u32();
+        rhs_size *= kai_get_sme_vector_length_u32();
+        dst_size *= kai_get_sme_vector_length_u32();
+    }
 
     const Buffer lhs(lhs_size);
     const Buffer rhs(rhs_size);
