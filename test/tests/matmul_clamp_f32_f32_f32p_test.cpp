@@ -10,9 +10,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <limits>
+#include <functional>
 #include <memory>
+#include <random>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 #include "kai/kai_common.h"
@@ -21,12 +23,12 @@
 #include "kai/ukernels/matmul/matmul_clamp_f32_f32_f32p/kai_matmul_clamp_f32_f32_f32p_interface.h"
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme.h"
 #include "kai/ukernels/matmul/pack/kai_rhs_pack_kxn_f32p2vlx1biasf32_f32_f32_sme.h"
+#include "test/common/buffer.hpp"
 #include "test/common/cpu_info.hpp"
 #include "test/common/data_type.hpp"
 #include "test/common/memory.hpp"
 #include "test/common/test_suite.hpp"
 #include "test/reference/clamp.hpp"
-#include "test/reference/fill.hpp"
 #include "test/reference/matmul.hpp"
 
 namespace kai::test {
@@ -59,6 +61,41 @@ const std::array<UkernelVariant<kai_matmul_clamp_f32_f32_f32p_ukernel>, 2> ukern
        kai_run_matmul_clamp_f32_f32_f32p2vlx1b_1x16vl_sme2_mla},
       "matmul_clamp_f32_f32_f32p2vlx1b_1x16vl_sme2_mla",
       cpu_has_sme2}}};
+
+// TODO: Reimplement these helpers in fill.cpp. These methods are currently duplicated here so they can be specialized
+// on the Buffer return type.
+template <typename T>
+Buffer fill_matrix_raw(size_t height, size_t width, std::function<T(size_t, size_t)> gen) {
+    const auto size = height * width * size_in_bits<T> / 8;
+    KAI_ASSUME(width * size_in_bits<T> % 8 == 0);
+
+    Buffer data(size);
+    auto ptr = static_cast<T*>(data.data());
+
+    for (size_t y = 0; y < height; ++y) {
+        for (size_t x = 0; x < width; ++x) {
+            write_array<T>(ptr, y * width + x, gen(y, x));
+        }
+    }
+
+    return data;
+}
+
+template <typename T>
+Buffer fill_matrix_random_raw(size_t height, size_t width, uint32_t seed) {
+    using TDist = std::conditional_t<
+        std::is_floating_point_v<T>, std::uniform_real_distribution<float>, std::uniform_int_distribution<T>>;
+
+    std::mt19937 rnd(seed);
+    TDist dist;
+
+    return fill_matrix_raw<T>(height, width, [&](size_t, size_t) { return dist(rnd); });
+}
+
+template <typename Value>
+Buffer fill_random(size_t length, uint32_t seed) {
+    return fill_matrix_random_raw<Value>(1, length, seed);
+}
 }  // namespace
 
 class MatMulTest_f32_f32_f32p : public ::testing::TestWithParam<MatMulTestParams> {};
@@ -85,9 +122,9 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     const auto sr = ukernel_variant.interface.get_sr();
 
     // Generates input data.
-    const auto ref_lhs = fill_random<float>(m * k, seed + 0);
-    const auto ref_rhs = fill_random<float>(n * k, seed + 1);
-    const auto ref_bias = fill_random<float>(n, seed + 2);
+    const Buffer ref_lhs(fill_random<float>(m * k, seed + 0));
+    const Buffer ref_rhs(fill_random<float>(n * k, seed + 1));
+    const Buffer ref_bias(fill_random<float>(n, seed + 2));
 
     // Runs the reference implementation
     const auto ref_dst_no_clamp = matmul(
@@ -103,19 +140,19 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     const auto rhs_stride = n * sizeof(float);
 
     size_t imp_packed_rhs_size = 0;
-    std::unique_ptr<std::vector<float>> imp_packed_rhs;
+    std::unique_ptr<Buffer> imp_packed_rhs;
 
     switch (variant_idx) {
         case 0:  // matmul_clamp_f32_f32_f32p16vlx1b_1x16vl_sme2_mla
             imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(n, k);
-            imp_packed_rhs = std::make_unique<std::vector<float>>(imp_packed_rhs_size);
+            imp_packed_rhs = std::make_unique<Buffer>(imp_packed_rhs_size);
             kai_run_rhs_pack_kxn_f32p16vlx1b_f32_f32_sme(
                 1, n, k, nr, kr, sr, rhs_stride, ref_rhs.data(), ref_bias.data(), nullptr, imp_packed_rhs->data(), 0,
                 nullptr);
             break;
         case 1:  // matmul_clamp_f32_f32_f32p2vlx1b_1x16vl_sme2_mla
             imp_packed_rhs_size = kai_get_rhs_packed_size_rhs_pack_kxn_f32p2vlx1biasf32_f32_f32_sme(n, k);
-            imp_packed_rhs = std::make_unique<std::vector<float>>(imp_packed_rhs_size);
+            imp_packed_rhs = std::make_unique<Buffer>(imp_packed_rhs_size);
             kai_run_rhs_pack_kxn_f32p2vlx1biasf32_f32_f32_sme(
                 1, n, k, nr, kr, sr, rhs_stride, ref_rhs.data(), ref_bias.data(), nullptr, imp_packed_rhs->data(), 0,
                 nullptr);
@@ -128,9 +165,9 @@ TEST_P(MatMulTest_f32_f32_f32p, EndToEnd)  // NOLINT(google-readability-avoid-un
     const auto imp_dst_size = ukernel_variant.interface.get_dst_size(m, n);
     ASSERT_EQ(imp_dst_size, ref_dst.size());
 
-    std::vector<uint8_t> imp_dst(imp_dst_size);
+    Buffer imp_dst(imp_dst_size);
     ukernel_variant.interface.run_matmul(
-        m, n, k, ref_lhs.data(), 1, imp_packed_rhs->data(), reinterpret_cast<float*>(imp_dst.data()), 1, 1, clamp_min,
+        m, n, k, ref_lhs.data(), 1, imp_packed_rhs->data(), static_cast<float*>(imp_dst.data()), 1, 1, clamp_min,
         clamp_max);
 
     // Compare the output of the micro-kernels against the output of the reference implementation.
